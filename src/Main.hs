@@ -1,4 +1,7 @@
 module Main where
 
+import AST
+
 main :: IO ()
-main = print . replicate 3 $ ("Hello, World" :: String)
+main = do
+    print $ N 1
