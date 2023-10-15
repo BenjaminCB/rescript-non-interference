@@ -22,7 +22,7 @@ data Expr = N Int
           deriving (Eq, Show)
 
 newtype Variable = V String
-                 deriving (Eq, Show)
+                 deriving (Eq, Ord, Show)
 
 newtype Location = L Int
                  deriving (Eq, Show)
