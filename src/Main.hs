@@ -1,9 +1,9 @@
 module Main where
 
 import AST
-import TypeChecker
+import Data.Map qualified as M
 import Progs
-import qualified Data.Map as M
+import TypeChecker
 
 main :: IO ()
 main = do
