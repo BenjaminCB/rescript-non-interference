@@ -21,11 +21,15 @@ data Expr = N Int
           | Assign Variable Expr
           deriving (Eq, Show)
 
-newtype Variable = V String
-                 deriving (Eq, Ord, Show)
+newtype Variable = V String deriving (Eq, Ord)
 
-newtype Location = L Int
-                 deriving (Eq, Show)
+instance Show Variable where
+    show (V x) = x
+
+newtype Location = L Int deriving (Eq)
+
+instance Show Location where
+    show (L l) = show l
 
 data Label = LabelS String
            | LabelI Int
@@ -36,7 +40,12 @@ data BinOper = Add | Sub | Mul | Div
 
 data LevelT = TInt Int
             | TAbs LevelT LevelT
-            deriving (Eq, Show)
+            deriving (Eq)
+
+instance Show LevelT where
+    show (TInt n) = show n
+    show (TAbs l1 l2) = show l1 ++ "->" ++ show l2
 
 instance Ord LevelT where
+    compare (TInt n) (TInt m) = compare n m
     compare _ _ = undefined
