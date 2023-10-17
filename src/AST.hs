@@ -72,4 +72,6 @@ instance Show LevelT where
 
 instance Ord LevelT where
     compare (TInt n) (TInt m) = compare n m
-    compare _ _ = undefined
+    compare (TInt n) (TAbs {}) = compare n 0
+    compare (TAbs {}) (TInt n) = compare 0 n
+    compare (TAbs {}) (TAbs {}) = EQ
