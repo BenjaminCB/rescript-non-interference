@@ -27,21 +27,21 @@ instance Show Expr where
     show (B b) = show b
     show Unit = "()"
     show (Var x) = show x
-    show (App e1 e2) = "(" ++ show e1 ++ " " ++ show e2 ++ ")"
+    show (App e1 e2) = show e1 ++ "(" ++ show e2 ++ ")"
     show (Abs x t e) = "(\\" ++ show x ++ "." ++ show t ++ "->" ++ show e ++ ")"
-    show (Seq e1 e2) = "(" ++ show e1 ++ ";" ++ show e2 ++ ")"
-    show (Let x t e) = "(let " ++ show x ++ "." ++ show t ++ " = " ++ show e ++ ")"
-    show (BO op e1 e2) = "(" ++ show e1 ++ " " ++ show op ++ " " ++ show e2 ++ ")"
+    show (Seq e1 e2) = show e1 ++ ";" ++ show e2
+    show (Let x t e) = "let " ++ show x ++ "." ++ show t ++ " = " ++ show e
+    show (BO op e1 e2) = show e1 ++ " " ++ show op ++ " " ++ show e2
     show (Rec fs) = "({" ++ show fs ++ "})"
     show (Proj e l) = "(" ++ show e ++ "." ++ show l ++ ")"
     show (IfThenElse e1 e2 e3) = "(if " ++ show e1 ++ " then " ++ show e2 ++ " else " ++ show e3 ++ ")"
     show (IfThen e1 e2) = "(if " ++ show e1 ++ " then " ++ show e2 ++ ")"
     show (While e1 e2) = "(while " ++ show e1 ++ " do " ++ show e2 ++ ")"
-    show (For x e1 e2 e3) = "(for " ++ show x ++ " in " ++ show e1 ++ " to " ++ show e2 ++ " do " ++ show e3 ++ ")"
-    show (Loc l) = "(<" ++ show l ++ ">)"
-    show (Ref e) = "(*" ++ show e ++ ")"
-    show (Deref e) = "(!" ++ show e ++ ")"
-    show (Assign x e) = "(" ++ show x ++ " := " ++ show e ++ ")"
+    show (For x e1 e2 e3) = "for " ++ show x ++ " in " ++ show e1 ++ " to " ++ show e2 ++ " do " ++ show e3
+    show (Loc l) = "<" ++ show l ++ ">"
+    show (Ref e) = "*" ++ show e
+    show (Deref e) = "!" ++ show e
+    show (Assign x e) = show x ++ " := " ++ show e
 
 newtype Variable = V String deriving (Eq, Ord)
 
@@ -59,7 +59,13 @@ data Label
     deriving (Eq, Show)
 
 data BinOper = Add | Sub | Mul | Div
-    deriving (Eq, Show)
+    deriving (Eq)
+
+instance Show BinOper where
+    show Add = "+"
+    show Sub = "-"
+    show Mul = "*"
+    show Div = "/"
 
 data LevelT
     = TInt Int
