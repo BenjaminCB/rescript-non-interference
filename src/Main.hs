@@ -7,7 +7,24 @@ import TypeChecker
 
 main :: IO ()
 main = do
-    print $ N 1
-    print $ check M.empty (TInt 0) (N 1)
-    print bindLowToHigh
-    print $ check M.empty (TInt 0) bindLowToHigh
+    checkDefault one
+    checkLevel (bindX 0) 1
+    checkLevel (bindX 1) 1
+    checkLevel (bindX 1) 0
+    checkDefault bindLowToHigh
+    checkDefault bindHighToLowRef
+    checkDefault bindLowToHighRef
+    checkDefault forLoopAccum
+    checkDefault assignInFunction
+    checkDefault whileLoop
+    checkDefault ifThen
+
+checkLevel :: Expr -> Int -> IO ()
+checkLevel e n = do
+    print e
+    putStrLn $ "Initial program counter: " ++ show n
+    print $ check M.empty (TInt n) e
+    putStrLn ""
+
+checkDefault :: Expr -> IO ()
+checkDefault = flip checkLevel 0

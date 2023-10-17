@@ -58,9 +58,9 @@ common shared
     DeriveFoldable
     DeriveFunctor
     DeriveTraversable
+    ImportQualifiedPost
     OverloadedStrings
     TupleSections
-    ImportQualifiedPost
 
 executable rescript-non-interference
   -- Import common warning flags.
