@@ -64,10 +64,15 @@ check env pc expr = case expr of
         sat (pc <= l2) "For: pc > l2"
         sat (pc' <= l3) "For: pc' > l3"
         return (env, maximum [l1, l2, l3])
+    (Let x l@(TInt _) e) -> do
+        (_, l') <- check env pc e
+        sat (l >= l') "LetTInt: l < l'"
+        sat (l >= pc) "LetTInt: l < pc"
+        return (M.insert x l env, l)
     (Let x l e) -> do
         (_, l') <- check env pc e
-        sat (l >= l') "Let: l < l'"
-        sat (l >= pc) "Let: l < pc"
+        sat (l == l') "LetTAbs: l /= l'"
+        sat (l >= pc) "LetTAbs: l < pc"
         return (M.insert x l env, l)
     (Seq e1 e2) -> do
         (env1, l1) <- check env pc e1
