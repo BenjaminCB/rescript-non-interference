@@ -19,7 +19,9 @@ main = do
     checkDefault whileLoop
     checkDefault ifThen
     checkDefault abstraction
+    checkDefault abstraction1
     checkDefault abstraction2
+    checkDefault abstraction3
 
 checkLevel :: Expr -> Int -> IO ()
 checkLevel e n = do

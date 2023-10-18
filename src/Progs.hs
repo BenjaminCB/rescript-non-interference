@@ -9,7 +9,9 @@ module Progs (
     whileLoop,
     ifThen,
     abstraction,
-    abstraction2
+    abstraction1,
+    abstraction2,
+    abstraction3,
 ) where
 
 import AST
@@ -69,12 +71,17 @@ forLoopAccum = seq [h, l, forLoop]
 abstraction :: Expr
 abstraction = Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
 
+
+abstraction1 :: Expr
+abstraction1 = Let (V "func") (TInt 0) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
+
 abstraction2 :: Expr
-abstraction2 = seq [h, l, func]
-    where
-        h = high . Ref . N $ 1
-        l = low . Ref . N $ 0
-        func = Let (V "func") (tabs [0,0,0]) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
+abstraction2 = Let (V "func") (tabs [0,0]) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
+
+abstraction3 :: Expr
+abstraction3 = Let (V "func") (tabs [0,0,0]) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
+
+
 
 assignInFunction :: Expr
 assignInFunction = seq [h, l, func, application]

@@ -78,6 +78,6 @@ instance Show LevelT where
 
 instance Ord LevelT where
     compare (TInt n) (TInt m) = compare n m
-    compare (TInt n) (TAbs {}) = compare n 0
-    compare (TAbs {}) (TInt n) = compare 0 n
-    compare (TAbs {}) (TAbs {}) = EQ
+    compare (TInt _) (TAbs _ _) = LT
+    compare (TAbs _ _) (TInt _) = GT
+    compare (TAbs l1 l2) (TAbs m1 m2) = compare l1 m1 <> compare l2 m2
