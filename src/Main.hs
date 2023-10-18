@@ -18,6 +18,8 @@ main = do
     checkDefault assignInFunction
     checkDefault whileLoop
     checkDefault ifThen
+    checkDefault abstraction
+    checkDefault abstraction2
 
 checkLevel :: Expr -> Int -> IO ()
 checkLevel e n = do
