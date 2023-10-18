@@ -74,6 +74,7 @@ executable rescript-non-interference
     AST
     Progs
     TypeChecker
+    Tree
 
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:
@@ -82,6 +83,7 @@ executable rescript-non-interference
   build-depends:
     , base        ^>=4.17.2.0
     , containers  ^>=0.6.7
+    , mtl         ^>=2.2.2
 
   -- Directories containing source files.
   hs-source-dirs:   src

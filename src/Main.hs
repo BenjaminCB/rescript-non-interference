@@ -4,6 +4,8 @@ import AST
 import Data.Map qualified as M
 import Progs
 import TypeChecker
+import Control.Monad.State.Lazy
+import Tree
 
 main :: IO ()
 main = do
@@ -27,7 +29,7 @@ checkLevel :: Expr -> Int -> IO ()
 checkLevel e n = do
     print e
     putStrLn $ "Initial program counter: " ++ show n
-    print $ check M.empty (TInt n) e
+    print $ runStateT (check M.empty (TInt n) e) [T "root" []]
     putStrLn ""
 
 checkDefault :: Expr -> IO ()
