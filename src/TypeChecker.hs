@@ -75,11 +75,9 @@ check env pc expr = case expr of
         sat (l1 >= pc) "Seq: l1 < pc"
         sat (l2 >= pc) "Seq: l2 < pc"
         return (env2, max l1 l2)
-    (Abs x l@(TAbs l1 l2) e) -> do
-        (_, l') <- check (M.insert x l1 env) pc e
-        sat (l2 == l') "Abs: l2 /= l'"
-        return (env, l)
-    (Abs {}) -> Left "Abs: not a function type"
+    (Abs x l e) -> do
+        (_, l') <- check (M.insert x l env) pc e
+        return (env, TAbs l l')
     (App e1 e2) -> do
         (_, l1) <- check env pc e1
         (_, l2) <- check env pc e2
