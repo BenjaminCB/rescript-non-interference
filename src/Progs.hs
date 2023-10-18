@@ -8,10 +8,15 @@ module Progs (
     assignInFunction,
     whileLoop,
     ifThen,
+    abstraction,
+    abstraction2
 ) where
 
 import AST
 import Prelude hiding (seq)
+
+tabs :: [Int] -> LevelT
+tabs = foldr1 TAbs . map TInt
 
 high :: Expr -> Expr
 high = Let (V "h") (TInt 1)
@@ -61,12 +66,22 @@ forLoopAccum = seq [h, l, forLoop]
         l = low . Ref . N $ 0
         forLoop = For (V "x") (N 1) (var "h") (Assign (V "l") (add (Deref $ var "l") (N 1)))
 
+abstraction :: Expr
+abstraction = Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
+
+abstraction2 :: Expr
+abstraction2 = seq [h, l, func]
+    where
+        h = high . Ref . N $ 1
+        l = low . Ref . N $ 0
+        func = Let (V "func") (tabs [0,0,0]) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
+
 assignInFunction :: Expr
 assignInFunction = seq [h, l, func, application]
     where
         h = high . Ref . N $ 1
         l = low . Ref . N $ 0
-        func = Abs (V "x") (TInt 0) (Abs (V "y") (TInt 0) (Assign (V "x") (Ref $ var "y")))
+        func = Let (V "func") (tabs [0,0,0]) $ Abs (V "x") (TInt 0) (Abs (V "y") (TInt 0) (Assign (V "x") (Ref $ var "y")))
         application = App (App (var "func") (var "l")) (var "h")
 
 whileLoop :: Expr
