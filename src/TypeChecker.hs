@@ -104,6 +104,6 @@ check env pc expr = case expr of
     (Assign x e) -> do
         (_, l') <- check env pc e
         l <- elookup x env
-        sat (l == l') "Assign: l /= l'"
+        sat (l >= l') "Assign: l < l'"
         sat (l >= pc) "Assign: l < pc"
         return (env, l)
