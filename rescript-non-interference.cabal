@@ -64,13 +64,6 @@ common shared
     FlexibleInstances
     MultiParamTypeClasses
 
-executable rescript-non-interference
-  -- Import common warning flags.
-  import:           shared
-
-  -- .hs or .lhs file containing the Main module.
-  main-is:          Main.hs
-
   -- Modules included in this executable, other than Main.
   other-modules:
     AST
@@ -78,6 +71,7 @@ executable rescript-non-interference
     TypeChecker
     Tree
     StateEither
+    Env
 
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:
@@ -87,9 +81,25 @@ executable rescript-non-interference
     , base        ^>=4.17.2.0
     , containers  ^>=0.6.7
     , mtl         ^>=2.2.2
+    , HUnit       ^>=1.6.2
 
   -- Directories containing source files.
   hs-source-dirs:   src
 
   -- Base language which the package is written in.
   default-language: Haskell2010
+
+executable rescript-non-interference
+  -- Import common warning flags.
+  import:           shared
+
+  -- .hs or .lhs file containing the Main module.
+  main-is:          Main.hs
+
+executable rescript-non-interference-test
+  -- Import common warning flags.
+  import:           shared
+
+  -- .hs or .lhs file containing the Main module.
+  main-is:          Test.hs
+
