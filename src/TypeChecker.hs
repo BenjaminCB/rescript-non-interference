@@ -21,11 +21,11 @@ sat False e = fail e
 
 check :: Env -> LevelT -> Expr -> StateEither [Tree String] (Env, LevelT)
 check env pc expr = case expr of
-    (N _) -> do
-        modify (T "N" []:)
+    (N n) -> do
+        modify (T ("N " ++ show n) []:)
         return (env, TInt 0)
-    (B _) -> do
-        modify (T "B" []:)
+    (B b) -> do
+        modify (T ("B " ++ show b) []:)
         return (env, TInt 0)
     Unit -> do
         modify (T "Unit" []:)
@@ -33,13 +33,13 @@ check env pc expr = case expr of
     (Var x) -> do
         l <- elookup x env
         sat (l >= pc) "Var: l < pc"
-        modify (T "Var" []:)
+        modify (T ("Var " ++ show x) []:)
         return (env, l)
     (BO _ e1 e2) -> do
         (_, l1) <- check env pc e1
         (_, l2) <- check env pc e2
         (t1:t2:ts) <- get
-        put (T "BO" [t1, t2]:ts)
+        put (T "BO" [t2, t1]:ts)
         return (env, max l1 l2)
     (IfThenElse e1 e2 e3) -> do
         (_, l1) <- check env pc e1
@@ -51,7 +51,7 @@ check env pc expr = case expr of
         sat (pc' <= l2) "IfThenElse: pc' > l2"
         sat (pc' <= l3) "IfThenElse: pc' > l3"
         (t1:t2:t3:ts) <- get
-        put (T "IfThenElse" [t1, t2, t3]:ts)
+        put (T "IfThenElse" [t3, t2, t1]:ts)
         return (env, l)
     (IfThen e1 e2) -> do
         (_, l1) <- check env pc e1
@@ -60,7 +60,7 @@ check env pc expr = case expr of
         sat (pc <= l1) "IfThen: pc > l1"
         sat (pc' <= l2) "IfThen: pc' > l2"
         (t1:t2:ts) <- get
-        put (T "IfThen" [t1, t2]:ts)
+        put (T "IfThen" [t2, t1]:ts)
         return (env, l2)
     (While e1 e2) -> do
         (_, l1) <- check env pc e1
@@ -69,7 +69,7 @@ check env pc expr = case expr of
         sat (pc <= l1) "While: pc > l1"
         sat (pc' <= l2) "While: pc' > l2"
         (t1:t2:ts) <- get
-        put (T "While" [t1, t2]:ts)
+        put (T "While" [t2, t1]:ts)
         return (env, max l1 l2)
     (For x e1 e2 e3) -> do
         (_, l1) <- check env pc e1
@@ -80,7 +80,7 @@ check env pc expr = case expr of
         sat (pc <= l2) "For: pc > l2"
         sat (pc' <= l3) "For: pc' > l3"
         (t1:t2:t3:ts) <- get
-        put (T "For" [t1, t2, t3]:ts)
+        put (T "For" [t3, t2, t1]:ts)
         return (env, maximum [l1, l2, l3])
     (Let x l@(TInt _) e) -> do
         (_, l') <- check env pc e
@@ -102,7 +102,7 @@ check env pc expr = case expr of
         sat (l1 >= pc) "Seq: l1 < pc"
         sat (l2 >= pc) "Seq: l2 < pc"
         (t1:t2:ts) <- get
-        put (T "Seq" [t1, t2]:ts)
+        put (T "Seq" [t2, t1]:ts)
         return (env2, max l1 l2)
     (Abs x l e) -> do
         (_, l') <- check (M.insert x l env) pc e
@@ -116,14 +116,14 @@ check env pc expr = case expr of
             (TAbs l1' l2') -> do
                 sat (l1' == l2) "App: l1' /= l2"
                 (t1:t2:ts) <- get
-                put (T "App" [t1, t2]:ts)
+                put (T "App" [t2, t1]:ts)
                 return (env, l2')
             _ -> fail "App: not a function type"
     (Rec fs) -> do
         ls <- traverse (fmap snd . check env pc . snd) fs
         ts <- get
         let (tsFst, tsSnd) = splitAt (length fs) ts
-        put (T "Rec" tsFst:tsSnd)
+        put (T "Rec" (reverse tsFst):tsSnd)
         return (env, maximum ls)
     (Proj e _) -> do
         (_, l) <- check env pc e

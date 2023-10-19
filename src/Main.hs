@@ -30,7 +30,18 @@ checkLevel :: Expr -> Int -> IO ()
 checkLevel e n = do
     print e
     putStrLn $ "Initial program counter: " ++ show n
-    print $ runStateEither (check M.empty (TInt n) e) [T "root" []]
+    let res = runStateEither (check M.empty (TInt n) e) [T "root" []]
+    case res of
+        Left (err, s) -> do
+            putStrLn "Error:"
+            print err
+            putStrLn "ProofTree:"
+            prettyPrintTree $ head s
+        Right (t, s) -> do
+            putStrLn "State:"
+            print t
+            putStrLn "ProofTree:"
+            prettyPrintTree $ head s
     putStrLn ""
 
 checkDefault :: Expr -> IO ()
