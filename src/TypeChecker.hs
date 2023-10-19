@@ -22,23 +22,24 @@ sat False e = fail e
 check :: Env -> LevelT -> Expr -> StateEither [Tree String] (Env, LevelT)
 check env pc expr = case expr of
     (N _) -> do
-        put [T "N" []]
+        modify (T "N" []:)
         return (env, TInt 0)
     (B _) -> do
-        put [T "B" []]
+        modify (T "B" []:)
         return (env, TInt 0)
     Unit -> do
-        put [T "Unit" []]
+        modify (T "Unit" []:)
         return (env, TInt 0)
     (Var x) -> do
         l <- elookup x env
         sat (l >= pc) "Var: l < pc"
-        put [T "Var" []]
+        modify (T "Var" []:)
         return (env, l)
     (BO _ e1 e2) -> do
         (_, l1) <- check env pc e1
         (_, l2) <- check env pc e2
-        modify (\ts -> [T "BO" ts])
+        (t1:t2:ts) <- get
+        put (T "BO" [t1, t2]:ts)
         return (env, max l1 l2)
     (IfThenElse e1 e2 e3) -> do
         (_, l1) <- check env pc e1
@@ -49,7 +50,8 @@ check env pc expr = case expr of
         sat (pc <= l1) "IfThenElse: pc > l1"
         sat (pc' <= l2) "IfThenElse: pc' > l2"
         sat (pc' <= l3) "IfThenElse: pc' > l3"
-        modify (\ts -> [T "IfThenElse" ts])
+        (t1:t2:t3:ts) <- get
+        put (T "IfThenElse" [t1, t2, t3]:ts)
         return (env, l)
     (IfThen e1 e2) -> do
         (_, l1) <- check env pc e1
@@ -57,7 +59,8 @@ check env pc expr = case expr of
         (_, l2) <- check env pc' e2
         sat (pc <= l1) "IfThen: pc > l1"
         sat (pc' <= l2) "IfThen: pc' > l2"
-        modify (\ts -> [T "IfThen" ts])
+        (t1:t2:ts) <- get
+        put (T "IfThen" [t1, t2]:ts)
         return (env, l2)
     (While e1 e2) -> do
         (_, l1) <- check env pc e1
@@ -65,7 +68,8 @@ check env pc expr = case expr of
         (_, l2) <- check env pc' e2
         sat (pc <= l1) "While: pc > l1"
         sat (pc' <= l2) "While: pc' > l2"
-        modify (\ts -> [T "While" ts])
+        (t1:t2:ts) <- get
+        put (T "While" [t1, t2]:ts)
         return (env, max l1 l2)
     (For x e1 e2 e3) -> do
         (_, l1) <- check env pc e1
@@ -75,30 +79,35 @@ check env pc expr = case expr of
         sat (pc <= l1) "For: pc > l1"
         sat (pc <= l2) "For: pc > l2"
         sat (pc' <= l3) "For: pc' > l3"
-        modify (\ts -> [T "For" ts])
+        (t1:t2:t3:ts) <- get
+        put (T "For" [t1, t2, t3]:ts)
         return (env, maximum [l1, l2, l3])
     (Let x l@(TInt _) e) -> do
         (_, l') <- check env pc e
         sat (l >= l') "LetTInt: l < l'"
         sat (l >= pc) "LetTInt: l < pc"
-        modify (\ts -> [T "LetTInt" ts])
+        (t:ts) <- get
+        put (T "LetTInt" [t]:ts)
         return (M.insert x l env, l)
     (Let x l e) -> do
         (_, l') <- check env pc e
         sat (l == l') "LetTAbs: l /= l'"
         sat (l >= pc) "LetTAbs: l < pc"
-        modify (\ts -> [T "LetTAbs" ts])
+        (t:ts) <- get
+        put (T "LetTAbs" [t]:ts)
         return (M.insert x l env, l)
     (Seq e1 e2) -> do
         (env1, l1) <- check env pc e1
         (env2, l2) <- check env1 pc e2
         sat (l1 >= pc) "Seq: l1 < pc"
         sat (l2 >= pc) "Seq: l2 < pc"
-        modify (\ts -> [T "Seq" ts])
+        (t1:t2:ts) <- get
+        put (T "Seq" [t1, t2]:ts)
         return (env2, max l1 l2)
     (Abs x l e) -> do
         (_, l') <- check (M.insert x l env) pc e
-        modify (\ts -> [T "Abs" ts])
+        (t:ts) <- get
+        put (T "Abs" [t]:ts)
         return (env, TAbs l l')
     (App e1 e2) -> do
         (_, l1) <- check env pc e1
@@ -106,30 +115,37 @@ check env pc expr = case expr of
         case l1 of
             (TAbs l1' l2') -> do
                 sat (l1' == l2) "App: l1' /= l2"
-                modify (\ts -> [T "App" ts])
+                (t1:t2:ts) <- get
+                put (T "App" [t1, t2]:ts)
                 return (env, l2')
             _ -> fail "App: not a function type"
     (Rec fs) -> do
         ls <- traverse (fmap snd . check env pc . snd) fs
-        modify (\ts -> [T "Rec" ts])
+        ts <- get
+        let (tsFst, tsSnd) = splitAt (length fs) ts
+        put (T "Rec" tsFst:tsSnd)
         return (env, maximum ls)
     (Proj e _) -> do
         (_, l) <- check env pc e
-        modify (\ts -> [T "Proj" ts])
+        (t:ts) <- get
+        put (T "Proj" [t]:ts)
         return (env, l)
     (Loc _) -> return (env, TInt 0)
     (Ref e) -> do
         (_, l) <- check env pc e
-        modify (\ts -> [T "Ref" ts])
+        (t:ts) <- get
+        put (T "Ref" [t]:ts)
         return (env, l)
     (Deref e) -> do
         (_, l) <- check env pc e
-        modify (\ts -> [T "Deref" ts])
+        (t:ts) <- get
+        put (T "Deref" [t]:ts)
         return (env, l)
     (Assign x e) -> do
         (_, l') <- check env pc e
         l <- elookup x env
         sat (l >= l') "Assign: l < l'"
         sat (l >= pc) "Assign: l < pc"
-        modify (\ts -> [T "Assign" ts])
+        (t:ts) <- get
+        put (T "Assign" [t]:ts)
         return (env, l)
