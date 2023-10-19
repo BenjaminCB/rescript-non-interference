@@ -4,6 +4,8 @@ import AST
 import Data.Map qualified as M
 import Progs
 import TypeChecker
+import Tree
+import StateEither
 
 main :: IO ()
 main = do
@@ -23,12 +25,24 @@ main = do
     checkDefault abstraction2
     checkDefault abstraction3
     checkDefault ifHighThenLow
+    checkDefault nestedBO
 
 checkLevel :: Expr -> Int -> IO ()
 checkLevel e n = do
     print e
     putStrLn $ "Initial program counter: " ++ show n
-    print $ check M.empty (TInt n) e
+    let res = runStateEither (check M.empty (TInt n) e) [T "root" []]
+    case res of
+        Left (err, s) -> do
+            putStrLn "Error:"
+            print err
+            putStrLn "ProofTree:"
+            prettyPrintTree $ head s
+        Right (t, s) -> do
+            putStrLn "State:"
+            print t
+            putStrLn "ProofTree:"
+            prettyPrintTree $ head s
     putStrLn ""
 
 checkDefault :: Expr -> IO ()

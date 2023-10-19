@@ -13,6 +13,7 @@ module Progs (
     abstraction2,
     abstraction3,
     ifHighThenLow,
+    nestedBO
 ) where
 
 import AST
@@ -111,3 +112,5 @@ ifHighThenLow = seq [h, ifT2]
     where
         h = high . Ref . B $ True
         ifT2 = IfThenElse (Deref $ var "h") (N 2) (N 4)
+nestedBO :: Expr
+nestedBO = BO Add (BO Mul (N 1) (N 2)) (BO Sub (N 3) (N 4))

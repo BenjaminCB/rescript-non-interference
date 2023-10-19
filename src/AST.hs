@@ -31,7 +31,7 @@ instance Show Expr where
     show (Abs x t e) = "(\\" ++ show x ++ "." ++ show t ++ "->" ++ show e ++ ")"
     show (Seq e1 e2) = show e1 ++ ";" ++ show e2
     show (Let x t e) = "let " ++ show x ++ "." ++ show t ++ " = " ++ show e
-    show (BO op e1 e2) = show e1 ++ " " ++ show op ++ " " ++ show e2
+    show (BO op e1 e2) = "(" ++ show e1 ++ " " ++ show op ++ " " ++ show e2 ++ ")"
     show (Rec fs) = "({" ++ show fs ++ "})"
     show (Proj e l) = "(" ++ show e ++ "." ++ show l ++ ")"
     show (IfThenElse e1 e2 e3) = "(if " ++ show e1 ++ " then " ++ show e2 ++ " else " ++ show e3 ++ ")"
