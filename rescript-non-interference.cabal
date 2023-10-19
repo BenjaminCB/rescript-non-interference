@@ -61,6 +61,8 @@ common shared
     ImportQualifiedPost
     OverloadedStrings
     TupleSections
+    FlexibleInstances
+    MultiParamTypeClasses
 
 executable rescript-non-interference
   -- Import common warning flags.
@@ -75,6 +77,7 @@ executable rescript-non-interference
     Progs
     TypeChecker
     Tree
+    StateEither
 
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:
