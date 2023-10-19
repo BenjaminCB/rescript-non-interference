@@ -12,6 +12,7 @@ module Progs (
     abstraction1,
     abstraction2,
     abstraction3,
+    ifHighThenLow,
 ) where
 
 import AST
@@ -104,3 +105,9 @@ ifThen = seq [h, l, ifT]
         h = high . Ref . B $ True
         l = low . Ref . B $ False
         ifT = IfThen (Deref $ var "h") (Assign (V "l") (B True))
+
+ifHighThenLow :: Expr
+ifHighThenLow = seq [h, ifT2]
+    where
+        h = high . Ref . B $ True
+        ifT2 = IfThenElse (Deref $ var "h") (N 2) (N 4)

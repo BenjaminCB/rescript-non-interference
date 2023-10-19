@@ -22,6 +22,7 @@ main = do
     checkDefault abstraction1
     checkDefault abstraction2
     checkDefault abstraction3
+    checkDefault ifHighThenLow
 
 checkLevel :: Expr -> Int -> IO ()
 checkLevel e n = do
