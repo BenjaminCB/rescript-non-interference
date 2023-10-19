@@ -17,3 +17,7 @@ fmt:
 # Run ghcid -- auto-recompile and run `main` function
 run:
     ghcid -c "cabal repl exe:rescript-non-interference" --warnings -T :main
+
+# Run ghcid -- auto-recompile and run `main` function
+test:
+    ghcid -c "cabal repl exe:rescript-non-interference-test" --warnings -T :main

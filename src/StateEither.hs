@@ -30,3 +30,7 @@ instance MonadState s (StateEither s) where
 instance MonadFail (StateEither s) where
     fail e = StateEither $ \s -> Left (e, s)
 
+evalStateEither :: StateEither s a -> s -> Either String a
+evalStateEither (StateEither f) s = case f s of
+    Left (e, _) -> Left e
+    Right (a, _) -> Right a

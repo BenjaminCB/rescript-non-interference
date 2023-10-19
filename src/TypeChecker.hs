@@ -3,12 +3,9 @@ module TypeChecker (check) where
 import AST
 import Data.Map qualified as M
 import Tree
+import Env
 import StateEither
 import Control.Monad.State.Lazy
-
--- i don't think env needs locations, at least not for now
--- type Env = M.Map (Either Variable Location) LevelT
-type Env = M.Map Variable LevelT
 
 elookup :: Variable -> Env -> StateEither [Tree String] LevelT
 elookup var env = case M.lookup var env of
