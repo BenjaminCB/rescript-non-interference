@@ -2,7 +2,7 @@ module StateEither where
 
 import Control.Monad.State.Lazy
 
-newtype StateEither s a = StateEither { runStateEither :: s -> Either (String, s) (a, s) }
+newtype StateEither s a = StateEither {runStateEither :: s -> Either (String, s) (a, s)}
 
 instance Functor (StateEither s) where
     fmap f (StateEither g) = StateEither $ \s -> case g s of

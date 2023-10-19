@@ -3,9 +3,9 @@ module Main where
 import AST
 import Data.Map qualified as M
 import Progs
-import TypeChecker
-import Tree
 import StateEither
+import Tree
+import TypeChecker
 
 main :: IO ()
 main = do

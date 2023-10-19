@@ -13,7 +13,7 @@ module Progs (
     abstraction2,
     abstraction3,
     ifHighThenLow,
-    nestedBO
+    nestedBO,
 ) where
 
 import AST
@@ -73,24 +73,21 @@ forLoopAccum = seq [h, l, forLoop]
 abstraction :: Expr
 abstraction = Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
 
-
 abstraction1 :: Expr
 abstraction1 = Let (V "func") (TInt 0) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
 
 abstraction2 :: Expr
-abstraction2 = Let (V "func") (tabs [0,0]) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
+abstraction2 = Let (V "func") (tabs [0, 0]) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
 
 abstraction3 :: Expr
-abstraction3 = Let (V "func") (tabs [0,0,0]) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
-
-
+abstraction3 = Let (V "func") (tabs [0, 0, 0]) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
 
 assignInFunction :: Expr
 assignInFunction = seq [h, l, func, application]
     where
         h = high . Ref . N $ 1
         l = low . Ref . N $ 0
-        func = Let (V "func") (tabs [0,0,0]) $ Abs (V "x") (TInt 0) (Abs (V "y") (TInt 0) (Assign (V "x") (Ref $ var "y")))
+        func = Let (V "func") (tabs [0, 0, 0]) $ Abs (V "x") (TInt 0) (Abs (V "y") (TInt 0) (Assign (V "x") (Ref $ var "y")))
         application = App (App (var "func") (var "l")) (var "h")
 
 whileLoop :: Expr
