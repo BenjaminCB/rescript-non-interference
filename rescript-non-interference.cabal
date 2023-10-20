@@ -70,7 +70,7 @@ common shared
     Env
     Progs
     StateEither
-    Tree
+    Prooftree
     TypeChecker
 
   -- LANGUAGE extensions used by modules in this package.

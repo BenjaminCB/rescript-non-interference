@@ -6,7 +6,7 @@ import Env
 import Progs
 import StateEither
 import Test.HUnit
-import Tree
+import Prooftree
 import TypeChecker
 
 checkN :: Expr -> Int -> Either String (Env, LevelT)

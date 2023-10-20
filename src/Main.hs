@@ -4,7 +4,7 @@ import AST
 import Data.Map qualified as M
 import Progs
 import StateEither
-import Tree
+import Prooftree
 import TypeChecker
 
 main :: IO ()
@@ -31,7 +31,7 @@ checkLevel :: Expr -> Int -> IO ()
 checkLevel e n = do
     print e
     putStrLn $ "Initial program counter: " ++ show n
-    let res = runStateEither (check M.empty (TInt n) e) [T "root" []]
+    let res = runStateEither (check M.empty (TInt n) e) [Error "Initial state"]
     case res of
         Left (err, s) -> do
             putStrLn "Error:"
