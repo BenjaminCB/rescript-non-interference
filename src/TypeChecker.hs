@@ -43,10 +43,7 @@ check env pc expr = case expr of
         let pc' = max l1 pc
         (_, l2) <- check env pc' e2
         (_, l3) <- check env pc' e3
-        let l = max l2 l3
-        sat (pc <= l1) "IfThenElse: pc > l1"
-        sat (pc' <= l2) "IfThenElse: pc' > l2"
-        sat (pc' <= l3) "IfThenElse: pc' > l3"
+        let l = maximum [l1, l2, l3]
         (t1 : t2 : t3 : ts) <- get
         put (T "IfThenElse" [t3, t2, t1] : ts)
         return (env, l)
@@ -54,17 +51,13 @@ check env pc expr = case expr of
         (_, l1) <- check env pc e1
         let pc' = max l1 pc
         (_, l2) <- check env pc' e2
-        sat (pc <= l1) "IfThen: pc > l1"
-        sat (pc' <= l2) "IfThen: pc' > l2"
         (t1 : t2 : ts) <- get
         put (T "IfThen" [t2, t1] : ts)
-        return (env, l2)
+        return (env, max l1 l2)
     (While e1 e2) -> do
         (_, l1) <- check env pc e1
         let pc' = max l1 pc
         (_, l2) <- check env pc' e2
-        sat (pc <= l1) "While: pc > l1"
-        sat (pc' <= l2) "While: pc' > l2"
         (t1 : t2 : ts) <- get
         put (T "While" [t2, t1] : ts)
         return (env, max l1 l2)
@@ -73,9 +66,6 @@ check env pc expr = case expr of
         (_, l2) <- check env pc e2
         let pc' = maximum [l1, l2, pc]
         (_, l3) <- check (M.insert x pc' env) pc' e3 -- TODO check this
-        sat (pc <= l1) "For: pc > l1"
-        sat (pc <= l2) "For: pc > l2"
-        sat (pc' <= l3) "For: pc' > l3"
         (t1 : t2 : t3 : ts) <- get
         put (T "For" [t3, t2, t1] : ts)
         return (env, maximum [l1, l2, l3])
