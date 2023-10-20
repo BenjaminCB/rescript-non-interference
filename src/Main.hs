@@ -6,6 +6,7 @@ import Progs
 import StateEither
 import Prooftree
 import TypeChecker
+import Control.Monad.State.Lazy
 
 main :: IO ()
 main = do
@@ -34,16 +35,14 @@ checkLevel e n = do
     putStrLn $ "Initial program counter: " ++ show n
     let res = runStateEither (check M.empty (TInt n) e) [Error "Initial state"]
     case res of
-        Left (err, s) -> do
+        Left (err, _) -> do
             putStrLn "Error:"
             print err
-            putStrLn "ProofTree:"
-            prettyPrintTree $ head s
-        Right (t, s) -> do
+        Right (t, _) -> do
             putStrLn "State:"
             print t
-            putStrLn "ProofTree:"
-            prettyPrintTree $ head s
+    putStrLn "Prooftree:"
+    prettyPrintTree $ evalState (prooftree e) (M.empty, TInt n)
     putStrLn ""
 
 checkDefault :: Expr -> IO ()
