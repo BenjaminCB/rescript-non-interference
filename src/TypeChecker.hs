@@ -29,7 +29,6 @@ check env pc expr = case expr of
         return (env, TInt 0)
     (Var x) -> do
         l <- elookup x env
-        sat (l >= pc) "Var: l < pc"
         modify (T ("Var " ++ show x) [] :)
         return (env, l)
     (BO _ e1 e2) -> do
