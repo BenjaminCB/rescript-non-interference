@@ -26,6 +26,7 @@ main = do
     checkDefault abstraction3
     checkDefault ifHighThenLow
     checkDefault nestedBO
+    checkDefault nestedBO2
 
 checkLevel :: Expr -> Int -> IO ()
 checkLevel e n = do
