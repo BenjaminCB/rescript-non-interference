@@ -86,8 +86,6 @@ check env pc expr = case expr of
     (Seq e1 e2) -> do
         (env1, l1) <- check env pc e1
         (env2, l2) <- check env1 pc e2
-        sat (l1 >= pc) "Seq: l1 < pc"
-        sat (l2 >= pc) "Seq: l2 < pc"
         (t1 : t2 : ts) <- get
         put (T "Seq" [t2, t1] : ts)
         return (env2, max l1 l2)
