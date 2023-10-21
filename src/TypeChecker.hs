@@ -166,8 +166,8 @@ prooftree expr = case expr of
     (Var x) -> do
         (env, _) <- get
         case M.lookup x env of
-            Just t -> return . Base $ Rule "Var" (show x ++ ":" ++ show t) []
-            Nothing -> return . Error $ "Variable " ++ show x ++ " not found in environment"
+            Just t -> return . Base $ Rule "Var" (show env ++ "|-" ++ show x ++ ":" ++ show t) []
+            Nothing -> return . Error $ "Variable " ++ show x ++ " not found in environment" ++ show env
     bo@(BO _ e1 e2) -> do
         t1 <- prooftree e1
         l1 <- getSnd
