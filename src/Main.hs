@@ -1,12 +1,12 @@
 module Main where
 
 import AST
+import Control.Monad.State.Lazy
 import Data.Map qualified as M
 import Progs
-import StateEither
 import Prooftree
+import StateEither
 import TypeChecker
-import Control.Monad.State.Lazy
 
 main :: IO ()
 main = do

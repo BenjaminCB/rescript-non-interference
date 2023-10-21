@@ -4,9 +4,9 @@ import AST
 import Data.Map qualified as M
 import Env
 import Progs
+import Prooftree
 import StateEither
 import Test.HUnit
-import Prooftree
 import TypeChecker
 
 checkN :: Expr -> Int -> Either String (Env, LevelT)
