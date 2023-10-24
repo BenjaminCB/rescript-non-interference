@@ -78,6 +78,6 @@ instance Show LevelT where
 
 instance Ord LevelT where
     compare (TInt n) (TInt m) = compare n m
-    compare (TInt n) (TAbs _ m) = compare n m
-    compare (TAbs _ n) (TInt m) = compare n m
+    compare n@(TInt _) (TAbs _ m) = compare n m
+    compare (TAbs _ n) m@(TInt _) = compare n m
     compare (TAbs _ n) (TAbs _ m) = compare n m
