@@ -182,6 +182,7 @@ prooftree expr = case expr of
         putSnd $ max l1 pc
         t2 <- prooftree e2
         l2 <- getSnd
+        putSnd $ max l1 pc
         t3 <- prooftree e3
         l3 <- getSnd
         putSnd $ maximum [l1, l2, l3]
