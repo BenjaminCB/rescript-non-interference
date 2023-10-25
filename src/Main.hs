@@ -1,50 +1,49 @@
 module Main where
 
 import AST
-import Control.Monad.State.Lazy
 import Data.Map qualified as M
 import Progs
-import Prooftree
 import StateEither
 import TypeChecker
 
 main :: IO ()
 main = do
-    checkDefault one
-    checkLevel (bindX 0) 1
-    checkLevel (bindX 1) 1
-    checkLevel (bindX 1) 0
-    checkDefault bindLowToHigh
-    checkDefault bindHighToLowRef
-    checkDefault bindLowToHighRef
-    checkDefault forLoopAccum
-    checkDefault assignInFunction
-    checkDefault whileLoop
-    checkDefault ifThen
-    checkDefault abstraction
-    checkDefault abstraction1
-    checkDefault abstraction2
-    checkDefault abstraction3
-    checkDefault ifHighThenLow
-    checkDefault nestedBO
-    checkDefault nestedBO2
-    checkDefault implicitFlow
+    checkDefault "one" one
+    checkLevel "bindX 0" (bindX 0) 1
+    checkLevel "bindX 1" (bindX 1) 1
+    checkLevel "bindX 1" (bindX 1) 0
+    checkDefault "bindLowToHigh" bindLowToHigh
+    checkDefault "bindHighToLowRef" bindHighToLowRef
+    checkDefault "bindLowToHighRef" bindLowToHighRef
+    checkDefault "forLoopAccum" forLoopAccum
+    checkDefault "assignInFunction" assignInFunction
+    checkDefault "whileLoop" whileLoop
+    checkDefault "ifThen" ifThen
+    checkDefault "abstraction" abstraction
+    checkDefault "abstraction1" abstraction1
+    checkDefault "abstraction2" abstraction2
+    checkDefault "abstraction3" abstraction3
+    checkDefault "ifHighThenLow" ifHighThenLow
+    checkDefault "nestedBO" nestedBO
+    checkDefault "nestedBO2" nestedBO2
+    checkDefault "implicitFlow" implicitFlow
 
-checkLevel :: Expr -> Int -> IO ()
-checkLevel e n = do
+checkLevel :: String -> Expr -> Int -> IO ()
+checkLevel name e n = do
+    print name
     print e
     putStrLn $ "Initial program counter: " ++ show n
     let res = runStateEither (check M.empty (TInt n) e) []
     case res of
         Left (err, trace) -> do
-            putStrLn "Error:"
-            print err
+            putStr $ "Error: " ++ show err
+            putStrLn ""
             putStrLn "Trace:"
-            mapM_ putStrLn trace
+            mapM_ (putStrLn . ("    "++)) trace
         Right (t, _) -> do
             putStrLn "State:"
             print t
     putStrLn ""
 
-checkDefault :: Expr -> IO ()
-checkDefault = flip checkLevel 0
+checkDefault :: String -> Expr -> IO ()
+checkDefault name e = checkLevel name e 0
