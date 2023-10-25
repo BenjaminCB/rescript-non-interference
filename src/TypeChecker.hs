@@ -290,8 +290,8 @@ prooftree expr = case expr of
         case M.lookup x env of
             Just l -> do
                 let tree
-                        | l < l' = Error "Assign: l < l'"
                         | l < pc = Error "Assign: l < pc"
+                        | l < l' = Error "Assign: l < l'"
                         | otherwise = Infer (Rule "Assign" (show a) []) (t :| [])
                 putSnd l
                 return tree
