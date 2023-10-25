@@ -28,6 +28,7 @@ main = do
     checkDefault ifHighThenLow
     checkDefault nestedBO
     checkDefault nestedBO2
+    checkDefault implicitFlow
 
 checkLevel :: Expr -> Int -> IO ()
 checkLevel e n = do
