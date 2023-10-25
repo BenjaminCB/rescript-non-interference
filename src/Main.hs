@@ -27,6 +27,8 @@ main = do
     checkDefault "nestedBO" nestedBO
     checkDefault "nestedBO2" nestedBO2
     checkDefault "implicitFlow" implicitFlow
+    checkDefault "assignInFunction2" assignInFunction2
+    checkDefault "assignInFunction3" assignInFunction3
 
 checkLevel :: String -> Expr -> Int -> IO ()
 checkLevel name e n = do
