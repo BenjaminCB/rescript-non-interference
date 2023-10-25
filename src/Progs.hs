@@ -15,6 +15,7 @@ module Progs (
     ifHighThenLow,
     nestedBO,
     nestedBO2,
+    implicitFlow,
 ) where
 
 import AST
@@ -116,3 +117,11 @@ nestedBO = BO Add (BO Mul (N 1) (N 2)) (BO Sub (N 3) (N 4))
 
 nestedBO2 :: Expr
 nestedBO2 = BO Add (BO Mul (N 1) (N 2)) (BO Sub (var "x") (N 4))
+
+implicitFlow :: Expr
+implicitFlow = seq [h1, h2, l, ifT]
+    where
+        h1 = Let (V "h1") (TInt 1) (N 1)
+        h2 = Let (V "h2") (TInt 1) (N 1)
+        l = Let (V "l") (TInt 0) (Ref $ N 0)
+        ifT = IfThenElse (BO Eq (var "h1") (var "h2")) (Assign (V "l") (N 1)) (Assign (V "l") (N 2))

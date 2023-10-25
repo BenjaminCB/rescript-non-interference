@@ -58,7 +58,7 @@ data Label
     | LabelI Int
     deriving (Eq, Show)
 
-data BinOper = Add | Sub | Mul | Div
+data BinOper = Add | Sub | Mul | Div | Eq
     deriving (Eq)
 
 instance Show BinOper where
@@ -66,6 +66,7 @@ instance Show BinOper where
     show Sub = "-"
     show Mul = "*"
     show Div = "/"
+    show Eq = "=="
 
 data LevelT
     = TInt Int
