@@ -69,8 +69,8 @@ common shared
     AST
     Env
     Progs
+    Prooftree
     StateEither
-    Tree
     TypeChecker
 
   -- LANGUAGE extensions used by modules in this package.

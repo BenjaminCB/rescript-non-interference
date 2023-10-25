@@ -1,10 +1,11 @@
 module Main where
 
 import AST
+import Control.Monad.State.Lazy
 import Data.Map qualified as M
 import Progs
+import Prooftree
 import StateEither
-import Tree
 import TypeChecker
 
 main :: IO ()
@@ -18,6 +19,8 @@ main = do
     checkDefault bindLowToHighRef
     checkDefault forLoopAccum
     checkDefault assignInFunction
+    checkDefault assignInFunction2
+    checkDefault assignInFunction3
     checkDefault whileLoop
     checkDefault ifThen
     checkDefault abstraction
@@ -26,25 +29,22 @@ main = do
     checkDefault abstraction3
     checkDefault ifHighThenLow
     checkDefault nestedBO
-    checkDefault assignInFunction2
-    checkDefault assignInFunction3
+    checkDefault nestedBO2
 
 checkLevel :: Expr -> Int -> IO ()
 checkLevel e n = do
     print e
     putStrLn $ "Initial program counter: " ++ show n
-    let res = runStateEither (check M.empty (TInt n) e) [T "root" []]
+    let res = runStateEither (check M.empty (TInt n) e) [Error "Initial state"]
     case res of
-        Left (err, s) -> do
+        Left (err, _) -> do
             putStrLn "Error:"
             print err
-            putStrLn "ProofTree:"
-            prettyPrintTree $ head s
-        Right (t, s) -> do
+        Right (t, _) -> do
             putStrLn "State:"
             print t
-            putStrLn "ProofTree:"
-            prettyPrintTree $ head s
+    putStrLn "Prooftree:"
+    prettyPrintTree $ evalState (prooftree e) (M.empty, TInt n)
     putStrLn ""
 
 checkDefault :: Expr -> IO ()
