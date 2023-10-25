@@ -34,16 +34,16 @@ checkLevel :: Expr -> Int -> IO ()
 checkLevel e n = do
     print e
     putStrLn $ "Initial program counter: " ++ show n
-    let res = runStateEither (check M.empty (TInt n) e) [Error "Initial state"]
+    let res = runStateEither (check M.empty (TInt n) e) []
     case res of
-        Left (err, _) -> do
+        Left (err, trace) -> do
             putStrLn "Error:"
             print err
+            putStrLn "Trace:"
+            mapM_ putStrLn trace
         Right (t, _) -> do
             putStrLn "State:"
             print t
-    putStrLn "Prooftree:"
-    prettyPrintTree $ evalState (prooftree e) (M.empty, TInt n)
     putStrLn ""
 
 checkDefault :: Expr -> IO ()
