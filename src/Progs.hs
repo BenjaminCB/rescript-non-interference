@@ -6,6 +6,8 @@ module Progs (
     bindLowToHighRef,
     forLoopAccum,
     assignInFunction,
+    assignInFunction2,
+    assignInFunction3,
     whileLoop,
     ifThen,
     abstraction,
@@ -91,6 +93,25 @@ assignInFunction = seq [h, l, func, application]
         l = low . Ref . N $ 0
         func = Let (V "func") (tabs [0, 0, 0]) $ Abs (V "x") (TInt 0) (Abs (V "y") (TInt 0) (Assign (V "x") (Ref $ var "y")))
         application = App (App (var "func") (var "l")) (var "h")
+
+-- Assign high param to low variable defined outside the function body. (Should fail)
+assignInFunction2 :: Expr
+assignInFunction2 = seq [h, l, func, application]
+    where
+        h = high . Ref . N $ 1
+        l = low . Ref . N $ 0
+        func = Let (V "func") (tabs [1, 0]) $ Abs (V "x") (TInt 0) (Assign (V "l") (Ref $ var "x"))
+        application = App (var "func")  (var "h")
+
+-- Assign number to low variable defined outside the function body and calling it in a high context. (Should fail)
+assignInFunction3 :: Expr
+assignInFunction3 = seq [h, l, func, ifstmt]
+    where
+        h = high . B $ True
+        l = low . Ref . N $ 0
+        func = Let (V "func") (tabs [0, 0]) $ Abs (V "x") (TInt 0) (seq [Assign (V "l") (N 3), var "x"])
+        application = App (var "func") (N 2)
+        ifstmt = IfThenElse (var "h") application (N 3)
 
 whileLoop :: Expr
 whileLoop = seq [h, l, while]
