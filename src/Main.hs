@@ -9,9 +9,9 @@ import TypeChecker
 main :: IO ()
 main = do
     checkDefault "one" one
-    -- checkLevel "bindX 0" (bindX 0) 1
-    -- checkLevel "bindX 1" (bindX 1) 1
-    -- checkLevel "bindX 1" (bindX 1) 0
+    checkLevel "bindX 0" (bindX 0) 1
+    checkLevel "bindX 1" (bindX 1) 1
+    checkLevel "bindX 1" (bindX 1) 0
     checkDefault "bindLowToHigh" bindLowToHigh
     checkDefault "bindHighToLowRef" bindHighToLowRef
     checkDefault "bindLowToHighRef" bindLowToHighRef

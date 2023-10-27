@@ -106,17 +106,17 @@ instance Ord LevelT where
     compare (TAbs _ n) m@(TInt _) = compare n m
     compare (TAbs _ n) (TAbs _ m) = compare n m
     compare (TRec ns) (TRec ms) =
-        if and $ zipWith (\(a,b) (a',b') -> a == a' && b >= b') (NE.toList ns) (NE.toList ms)
-        then GT
-        else LT
+        if and $ zipWith (\(a, b) (a', b') -> a == a' && b >= b') (NE.toList ns) (NE.toList ms)
+            then GT
+            else LT
     compare (TRec ns) m@(TInt _) =
-        if all (\(_,b) -> b >= m) (NE.toList ns)
-        then GT
-        else LT
+        if all (\(_, b) -> b >= m) (NE.toList ns)
+            then GT
+            else LT
     compare n@(TInt _) (TRec ms) =
-        if any (\(_,b) -> n >= b) (NE.toList ms)
-        then GT
-        else LT
+        if any (\(_, b) -> n >= b) (NE.toList ms)
+            then GT
+            else LT
     compare TEmpty _ = GT
     compare _ TEmpty = LT
     compare (TEffect n _) m = compare n m

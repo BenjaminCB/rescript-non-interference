@@ -25,8 +25,8 @@ module Progs (
 ) where
 
 import AST
-import Prelude hiding (seq)
 import Data.List.NonEmpty (NonEmpty (..))
+import Prelude hiding (seq)
 
 high :: Expr -> Expr
 high = Let (V "h") (TInt 1)
@@ -96,7 +96,8 @@ assignInFunction = seq [h, l, func, application]
         func =
             Let
                 (V "func")
-                (TInt 0 --> TInt 0 --> TInt 0) $ Abs
+                (TInt 0 --> TInt 0 --> TInt 0)
+                $ Abs
                     (V "x")
                     (TInt 0)
                     (Abs (V "y") (TInt 0) (Assign (V "x") (Ref $ var "y")))
@@ -108,12 +109,14 @@ assignInFunction2 = seq [h, l, func, application]
     where
         h = high . Ref . N $ 1
         l = low . Ref . N $ 0
-        func = Let
-            (V "func")
-            (TInt 1 --> TInt 0) $ Abs
-                (V "x")
-                (TInt 0)
-                (Assign (V "l") (Ref $ var "x"))
+        func =
+            Let
+                (V "func")
+                (TInt 1 --> TInt 0)
+                $ Abs
+                    (V "x")
+                    (TInt 0)
+                    (Assign (V "l") (Ref $ var "x"))
         application = App (var "func") (var "h")
 
 -- Assign number to low variable defined outside the function body and calling it in a high context. (Should fail)
@@ -122,12 +125,14 @@ assignInFunction3 = seq [h, l, func, ifstmt]
     where
         h = high . B $ True
         l = low . Ref . N $ 0
-        func = Let
-            (V "func")
-            (TInt 0 --> TInt 0) $ Abs
-                (V "x")
-                (TInt 0)
-                (seq [Assign (V "l") (N 3), var "x"])
+        func =
+            Let
+                (V "func")
+                (TInt 0 --> TInt 0)
+                $ Abs
+                    (V "x")
+                    (TInt 0)
+                    (seq [Assign (V "l") (N 3), var "x"])
         application = App (var "func") (N 2)
         ifstmt = IfThenElse (var "h") application (N 3)
 

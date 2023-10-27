@@ -148,13 +148,14 @@ check env pc expr = case expr of
         modify (++ ["Rec: " ++ show expr]) -- TODO implement proper trace
         trace <- get
         (ls, effs) <-
-            NE.unzip <$> traverse
-                ( \(label, e) -> do
-                    put trace
-                    (_, l', eff') <- check env pc e
-                    return ((label, l'), eff')
-                )
-                fs
+            NE.unzip
+                <$> traverse
+                    ( \(label, e) -> do
+                        put trace
+                        (_, l', eff') <- check env pc e
+                        return ((label, l'), eff')
+                    )
+                    fs
         return (env, TRec ls, minimum effs)
     (Proj e label) -> do
         modify (++ ["Proj: " ++ show expr])
