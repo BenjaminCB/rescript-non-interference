@@ -30,7 +30,8 @@ data Rule = Rule
     { name :: String
     , conclussion :: String
     , sideconditions :: [String]
-    } deriving (Eq)
+    }
+    deriving (Eq)
 
 instance Show Rule where
     show (Rule n c scs) = n ++ " |> " ++ c ++ " <| " ++ show scs

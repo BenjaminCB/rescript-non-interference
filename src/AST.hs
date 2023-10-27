@@ -1,5 +1,8 @@
 module AST where
 
+import Data.List (intercalate)
+import Data.List.NonEmpty qualified as NE
+
 data Expr
     = N Int
     | B Bool
@@ -10,7 +13,7 @@ data Expr
     | Seq Expr Expr
     | Let Variable LevelT Expr
     | BO BinOper Expr Expr
-    | Rec [(Label, Expr)]
+    | Rec (NE.NonEmpty (Label, Expr))
     | Proj Expr Label
     | IfThenElse Expr Expr Expr
     | IfThen Expr Expr
@@ -32,8 +35,8 @@ instance Show Expr where
     show (Seq e1 e2) = show e1 ++ ";" ++ show e2
     show (Let x t e) = "let " ++ show x ++ "." ++ show t ++ " = " ++ show e
     show (BO op e1 e2) = "(" ++ show e1 ++ " " ++ show op ++ " " ++ show e2 ++ ")"
-    show (Rec fs) = "({" ++ show fs ++ "})"
-    show (Proj e l) = "(" ++ show e ++ "." ++ show l ++ ")"
+    show (Rec fs) = "{" ++ intercalate ", " (NE.toList $ NE.map (\(a, b) -> show a ++ " = " ++ show b) fs) ++ "}"
+    show (Proj e l) = show e ++ "." ++ show l
     show (IfThenElse e1 e2 e3) = "(if " ++ show e1 ++ " then " ++ show e2 ++ " else " ++ show e3 ++ ")"
     show (IfThen e1 e2) = "(if " ++ show e1 ++ " then " ++ show e2 ++ ")"
     show (While e1 e2) = "(while " ++ show e1 ++ " do " ++ show e2 ++ ")"
@@ -56,7 +59,11 @@ instance Show Location where
 data Label
     = LabelS String
     | LabelI Int
-    deriving (Eq, Show)
+    deriving (Eq)
+
+instance Show Label where
+    show (LabelS s) = s
+    show (LabelI i) = show i
 
 data BinOper = Add | Sub | Mul | Div | Eq
     deriving (Eq)
@@ -71,14 +78,29 @@ instance Show BinOper where
 data LevelT
     = TInt Int
     | TAbs LevelT LevelT LevelT
+    | TRec (NE.NonEmpty (Label, LevelT))
     deriving (Eq)
 
 instance Show LevelT where
     show (TInt n) = show n
     show (TAbs pc l1 l2) = show (show pc, show l1 ++ "->" ++ show l2)
+    show (TRec fs) = "{" ++ intercalate ", " (map (\(a, b) -> show a ++ ": " ++ show b) $ NE.toList fs) ++ "}"
 
 instance Ord LevelT where
     compare (TInt n) (TInt m) = compare n m
     compare n@(TInt _) (TAbs _ _ m) = compare n m
     compare (TAbs _ _ n) m@(TInt _) = compare n m
     compare (TAbs _ _ n) (TAbs _ _ m) = compare n m
+    compare (TRec ns) (TRec ms) =
+        if and $ zipWith (\(a,b) (a',b') -> a == a' && b >= b') (NE.toList ns) (NE.toList ms)
+        then GT
+        else LT
+    compare (TRec ns) m@(TInt _) =
+        if all (\(_,b) -> b >= m) (NE.toList ns)
+        then GT
+        else LT
+    compare n@(TInt _) (TRec ms) =
+        if any (\(_,b) -> n >= b) (NE.toList ms)
+        then GT
+        else LT
+    compare _ _ = error "undefined comparison for TRec" -- TODO

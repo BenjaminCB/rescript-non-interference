@@ -18,10 +18,15 @@ module Progs (
     nestedBO,
     nestedBO2,
     implicitFlow,
+    bindAndProjectRecord1,
+    bindAndProjectRecord2,
+    bindAndProjectRecord3,
+    bindAndProjectRecord4,
 ) where
 
 import AST
 import Prelude hiding (seq)
+import Data.List.NonEmpty (NonEmpty (..))
 
 tabs :: [Int] -> LevelT
 tabs = foldr1 (TAbs (TInt 0)) . map TInt
@@ -101,7 +106,7 @@ assignInFunction2 = seq [h, l, func, application]
         h = high . Ref . N $ 1
         l = low . Ref . N $ 0
         func = Let (V "func") (tabs [1, 0]) $ Abs (V "x") (TInt 0) (Assign (V "l") (Ref $ var "x"))
-        application = App (var "func")  (var "h")
+        application = App (var "func") (var "h")
 
 -- Assign number to low variable defined outside the function body and calling it in a high context. (Should fail)
 assignInFunction3 :: Expr
@@ -146,3 +151,35 @@ implicitFlow = seq [h1, h2, l, ifT]
         h2 = Let (V "h2") (TInt 1) (N 1)
         l = Let (V "l") (TInt 0) (Ref $ N 0)
         ifT = IfThenElse (BO Eq (var "h1") (var "h2")) (Assign (V "l") (N 1)) (Assign (V "l") (N 2))
+
+bindAndProjectRecord1 :: Expr
+bindAndProjectRecord1 = seq [record, proj]
+    where
+        t = TRec $ (LabelS "x", TInt 0) :| [(LabelS "y", TInt 1)]
+        r = Rec $ (LabelS "x", N 1) :| [(LabelS "y", N 2)]
+        record = Let (V "record") t r
+        proj = Proj (var "record") (LabelS "x")
+
+bindAndProjectRecord2 :: Expr
+bindAndProjectRecord2 = seq [record, proj]
+    where
+        t = TRec $ (LabelS "x", TInt 0) :| [(LabelS "y", TInt 1)]
+        r = Rec $ (LabelS "x", N 1) :| [(LabelS "y", N 2)]
+        record = Let (V "record") t r
+        proj = Proj (var "record") (LabelS "y")
+
+bindAndProjectRecord3 :: Expr
+bindAndProjectRecord3 = seq [record, proj]
+    where
+        t = TRec $ (LabelS "y", TInt 0) :| [(LabelS "x", TInt 1)]
+        r = Rec $ (LabelS "y", N 1) :| [(LabelS "x", N 2)]
+        record = Let (V "record") t r
+        proj = Proj (var "record") (LabelS "y")
+
+bindAndProjectRecord4 :: Expr
+bindAndProjectRecord4 = seq [record, proj]
+    where
+        t = TRec $ (LabelS "y", TInt 0) :| [(LabelS "x", TInt 1)]
+        r = Rec $ (LabelS "y", N 1) :| [(LabelS "x", N 2)]
+        record = Let (V "record") t r
+        proj = Proj (var "record") (LabelS "x")

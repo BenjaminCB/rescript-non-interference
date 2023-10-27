@@ -4,16 +4,25 @@ module TypeChecker (
 
 import AST
 import Control.Monad.State.Lazy
-import Data.Map qualified as M
 import Data.Bifunctor
+import Data.List.NonEmpty qualified as NE
+import Data.Map qualified as M
 import Env
 import StateEither
 
-elookup :: Variable -> Env -> StateEither ([String], LevelT) LevelT
+elookup :: (Ord k, Show k) => k -> M.Map k a -> StateEither ([String], LevelT) a
 elookup var env = case M.lookup var env of
     Just t -> return t
     Nothing -> do
         let msg = "Variable " ++ show var ++ " not found in environment"
+        modifyFst (++ [msg])
+        fail msg
+
+nelookup :: (Eq a, Show a) => a -> NE.NonEmpty (a, b) -> StateEither ([String], LevelT) b
+nelookup a xs = case lookup a $ NE.toList xs of
+    Just b -> return b
+    Nothing -> do
+        let msg = "Label " ++ show a ++ " not found in record"
         modifyFst (++ [msg])
         fail msg
 
@@ -23,29 +32,27 @@ sat False e = do
     modifyFst (++ [e])
     fail e
 
-modifyFst :: MonadState (t, b) m => (t -> t) -> m ()
+modifyFst :: (MonadState (t, b) m) => (t -> t) -> m ()
 modifyFst = modify . first
 
-getFst :: MonadState (t, b) m => m t
+getFst :: (MonadState (t, b) m) => m t
 getFst = gets fst
 
-putFst :: MonadState (t, b) m => t -> m ()
+putFst :: (MonadState (t, b) m) => t -> m ()
 putFst t = do
     (_, b) <- get
     put (t, b)
 
-
-modifySnd :: MonadState (a, t) m => (t -> t) -> m ()
+modifySnd :: (MonadState (a, t) m) => (t -> t) -> m ()
 modifySnd = modify . second
 
-getSnd :: MonadState (a, t) m => m t
+getSnd :: (MonadState (a, t) m) => m t
 getSnd = gets snd
 
-putSnd :: MonadState (a, t) m => t -> m ()
+putSnd :: (MonadState (a, t) m) => t -> m ()
 putSnd t = do
     (a, _) <- get
     put (a, t)
-
 
 check :: Env -> LevelT -> Expr -> StateEither ([String], LevelT) (Env, LevelT)
 check env pc expr = case expr of
@@ -111,10 +118,20 @@ check env pc expr = case expr of
         sat (l >= l') "NotSat: l >= l'"
         sat (l >= pc) "NotSat: l >= pc"
         return (M.insert x l env, l)
-    (Let x l e) -> do
+    (Let x l@(TAbs {}) e) -> do
         modifyFst (++ ["LetTAbs: " ++ show expr])
+        trace <- getFst
         (_, l') <- check env pc e
+        putFst trace
         sat (l == l') "NotSat: l == l'"
+        sat (l >= pc) "NotSat: l >= pc"
+        return (M.insert x l env, l)
+    (Let x l@(TRec {}) e) -> do
+        modifyFst (++ ["LetTRec: " ++ show expr])
+        trace <- getFst
+        (_, l') <- check env pc e
+        putFst trace
+        sat (l >= l') "NotSat: l >= l'"
         sat (l >= pc) "NotSat: l >= pc"
         return (M.insert x l env, l)
     (Seq e1 e2) -> do
@@ -145,12 +162,28 @@ check env pc expr = case expr of
             _ -> fail "App: not a function type"
     (Rec fs) -> do
         modifyFst (++ ["Rec: " ++ show expr]) -- TODO implement proper trace
-        ls <- traverse (fmap snd . check env pc . snd) fs
-        return (env, maximum ls)
-    (Proj e _) -> do
+        trace <- getFst
+        ls <-
+            traverse
+                ( \(label, e) -> do
+                    putFst trace
+                    (_, l') <- check env pc e
+                    return (label, l')
+                )
+                fs
+        return (env, TRec ls)
+    (Proj e label) -> do
         modifyFst (++ ["Proj: " ++ show expr])
+        trace <- getFst
         (_, l) <- check env pc e
-        return (env, l)
+        putFst trace
+        case l of
+            (TRec ls) -> do
+                l' <- nelookup label ls
+                return (env, l')
+            _ -> do
+                modifyFst (++ ["Proj: not a record type"])
+                fail "Proj: not a record type"
     (Loc _) -> do
         modifyFst (++ ["Loc: " ++ show expr])
         return (env, TInt 0)

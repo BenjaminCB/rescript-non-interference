@@ -29,6 +29,10 @@ main = do
     checkDefault "implicitFlow" implicitFlow
     checkDefault "assignInFunction2" assignInFunction2
     checkDefault "assignInFunction3" assignInFunction3
+    checkDefault "bindAndProjectRecord1" bindAndProjectRecord1
+    checkDefault "bindAndProjectRecord2" bindAndProjectRecord2
+    checkDefault "bindAndProjectRecord3" bindAndProjectRecord3
+    checkDefault "bindAndProjectRecord4" bindAndProjectRecord4
 
 checkLevel :: String -> Expr -> Int -> IO ()
 checkLevel name e n = do
@@ -41,7 +45,7 @@ checkLevel name e n = do
             putStr $ "Error: " ++ show err
             putStrLn ""
             putStrLn "Trace:"
-            mapM_ (putStrLn . ("    "++)) trace
+            mapM_ (putStrLn . ("    " ++)) trace
         Right (t, _) -> do
             putStrLn "State:"
             print t
