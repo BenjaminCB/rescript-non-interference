@@ -10,7 +10,7 @@ import Data.Map qualified as M
 import Env
 import StateEither
 
-elookup :: Variable -> Env -> StateEither ([String], LevelT) LevelT
+elookup :: (Ord k, Show k) => k -> M.Map k a -> StateEither ([String], LevelT) a
 elookup var env = case M.lookup var env of
     Just t -> return t
     Nothing -> do
@@ -18,8 +18,13 @@ elookup var env = case M.lookup var env of
         modifyFst (++ [msg])
         fail msg
 
-nelookup :: (Eq a) => a -> NE.NonEmpty (a, b) -> Maybe (a, b)
-nelookup a = fmap (a,) . lookup a . NE.toList
+nelookup :: (Eq a, Show a) => a -> NE.NonEmpty (a, b) -> StateEither ([String], LevelT) b
+nelookup a xs = case lookup a $ NE.toList xs of
+    Just b -> return b
+    Nothing -> do
+        let msg = "Label " ++ show a ++ " not found in record"
+        modifyFst (++ [msg])
+        fail msg
 
 sat :: Bool -> String -> StateEither ([String], LevelT) ()
 sat True _ = return ()
@@ -161,11 +166,9 @@ check env pc expr = case expr of
         modifyFst (++ ["Proj: " ++ show expr])
         (_, l) <- check env pc e
         case l of
-            (TRec ls) -> case nelookup label ls of
-                Just (_, l') -> return (env, l')
-                Nothing -> do
-                    modifyFst (++ ["Proj: label not found"])
-                    fail "Proj: label not found"
+            (TRec ls) -> do
+                l' <- nelookup label ls
+                return (env, l')
             _ -> do
                 modifyFst (++ ["Proj: not a record type"])
                 fail "Proj: not a record type"
