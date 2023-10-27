@@ -18,10 +18,15 @@ module Progs (
     nestedBO,
     nestedBO2,
     implicitFlow,
+    bindAndProjectRecord1,
+    bindAndProjectRecord2,
+    bindAndProjectRecord3,
+    bindAndProjectRecord4,
 ) where
 
 import AST
 import Prelude hiding (seq)
+import Data.List.NonEmpty (NonEmpty (..))
 
 tabs :: [Int] -> LevelT
 tabs = foldr1 (TAbs (TInt 0)) . map TInt
@@ -146,3 +151,35 @@ implicitFlow = seq [h1, h2, l, ifT]
         h2 = Let (V "h2") (TInt 1) (N 1)
         l = Let (V "l") (TInt 0) (Ref $ N 0)
         ifT = IfThenElse (BO Eq (var "h1") (var "h2")) (Assign (V "l") (N 1)) (Assign (V "l") (N 2))
+
+bindAndProjectRecord1 :: Expr
+bindAndProjectRecord1 = seq [record, proj]
+    where
+        t = TRec $ (LabelS "x", TInt 0) :| [(LabelS "y", TInt 1)]
+        r = Rec $ (LabelS "x", N 1) :| [(LabelS "y", N 2)]
+        record = Let (V "record") t r
+        proj = Proj (var "record") (LabelS "x")
+
+bindAndProjectRecord2 :: Expr
+bindAndProjectRecord2 = seq [record, proj]
+    where
+        t = TRec $ (LabelS "x", TInt 0) :| [(LabelS "y", TInt 1)]
+        r = Rec $ (LabelS "x", N 1) :| [(LabelS "y", N 2)]
+        record = Let (V "record") t r
+        proj = Proj (var "record") (LabelS "y")
+
+bindAndProjectRecord3 :: Expr
+bindAndProjectRecord3 = seq [record, proj]
+    where
+        t = TRec $ (LabelS "y", TInt 0) :| [(LabelS "x", TInt 1)]
+        r = Rec $ (LabelS "y", N 1) :| [(LabelS "x", N 2)]
+        record = Let (V "record") t r
+        proj = Proj (var "record") (LabelS "y")
+
+bindAndProjectRecord4 :: Expr
+bindAndProjectRecord4 = seq [record, proj]
+    where
+        t = TRec $ (LabelS "y", TInt 0) :| [(LabelS "x", TInt 1)]
+        r = Rec $ (LabelS "y", N 1) :| [(LabelS "x", N 2)]
+        record = Let (V "record") t r
+        proj = Proj (var "record") (LabelS "x")

@@ -118,10 +118,20 @@ check env pc expr = case expr of
         sat (l >= l') "NotSat: l >= l'"
         sat (l >= pc) "NotSat: l >= pc"
         return (M.insert x l env, l)
-    (Let x l e) -> do
+    (Let x l@(TAbs {}) e) -> do
         modifyFst (++ ["LetTAbs: " ++ show expr])
+        trace <- getFst
         (_, l') <- check env pc e
+        putFst trace
         sat (l == l') "NotSat: l == l'"
+        sat (l >= pc) "NotSat: l >= pc"
+        return (M.insert x l env, l)
+    (Let x l@(TRec {}) e) -> do
+        modifyFst (++ ["LetTRec: " ++ show expr])
+        trace <- getFst
+        (_, l') <- check env pc e
+        putFst trace
+        sat (l >= l') "NotSat: l >= l'"
         sat (l >= pc) "NotSat: l >= pc"
         return (M.insert x l env, l)
     (Seq e1 e2) -> do
@@ -164,7 +174,9 @@ check env pc expr = case expr of
         return (env, TRec ls)
     (Proj e label) -> do
         modifyFst (++ ["Proj: " ++ show expr])
+        trace <- getFst
         (_, l) <- check env pc e
+        putFst trace
         case l of
             (TRec ls) -> do
                 l' <- nelookup label ls
