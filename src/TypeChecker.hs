@@ -5,141 +5,170 @@ module TypeChecker (
 import AST
 import Control.Monad.State.Lazy
 import Data.Map qualified as M
+import Data.Bifunctor
 import Env
 import StateEither
 
-elookup :: Variable -> Env -> StateEither [String] LevelT
+elookup :: Variable -> Env -> StateEither ([String], LevelT) LevelT
 elookup var env = case M.lookup var env of
     Just t -> return t
     Nothing -> do
         let msg = "Variable " ++ show var ++ " not found in environment"
-        modify (++ [msg])
+        modifyFst (++ [msg])
         fail msg
 
-sat :: Bool -> String -> StateEither [String] ()
+sat :: Bool -> String -> StateEither ([String], LevelT) ()
 sat True _ = return ()
 sat False e = do
-    modify (++ [e])
+    modifyFst (++ [e])
     fail e
 
-check :: Env -> LevelT -> Expr -> StateEither [String] (Env, LevelT)
+modifyFst :: MonadState (t, b) m => (t -> t) -> m ()
+modifyFst = modify . first
+
+getFst :: MonadState (t, b) m => m t
+getFst = gets fst
+
+putFst :: MonadState (t, b) m => t -> m ()
+putFst t = do
+    (_, b) <- get
+    put (t, b)
+
+
+modifySnd :: MonadState (a, t) m => (t -> t) -> m ()
+modifySnd = modify . second
+
+getSnd :: MonadState (a, t) m => m t
+getSnd = gets snd
+
+putSnd :: MonadState (a, t) m => t -> m ()
+putSnd t = do
+    (a, _) <- get
+    put (a, t)
+
+
+check :: Env -> LevelT -> Expr -> StateEither ([String], LevelT) (Env, LevelT)
 check env pc expr = case expr of
     (N _) -> do
-        modify (++ ["Num: " ++ show expr])
+        modifyFst (++ ["Num: " ++ show expr])
         return (env, TInt 0)
     (B _) -> do
-        modify (++ ["Bool: " ++ show expr])
+        modifyFst (++ ["Bool: " ++ show expr])
         return (env, TInt 0)
     Unit -> do
-        modify (++ ["Unit: " ++ show expr])
+        modifyFst (++ ["Unit: " ++ show expr])
         return (env, TInt 0)
     (Var x) -> do
-        modify (++ ["Var: " ++ show expr])
+        modifyFst (++ ["Var: " ++ show expr])
         l <- elookup x env
         return (env, l)
     (BO _ e1 e2) -> do
-        modify (++ ["BO: " ++ show expr])
-        trace <- get
+        modifyFst (++ ["BO: " ++ show expr])
+        trace <- getFst
         (_, l1) <- check env pc e1
-        put trace
+        putFst trace
         (_, l2) <- check env pc e2
         return (env, max l1 l2)
     (IfThenElse e1 e2 e3) -> do
-        modify (++ ["IfThenElse: " ++ show expr])
-        trace <- get
+        modifyFst (++ ["IfThenElse: " ++ show expr])
+        trace <- getFst
         (_, l1) <- check env pc e1
         let pc' = max l1 pc
-        put trace
+        putFst trace
         (_, l2) <- check env pc' e2
-        put trace
+        putFst trace
         (_, l3) <- check env pc' e3
         return (env, maximum [l1, l2, l3])
     (IfThen e1 e2) -> do
-        modify (++ ["IfThen: " ++ show expr])
-        trace <- get
+        modifyFst (++ ["IfThen: " ++ show expr])
+        trace <- getFst
         (_, l1) <- check env pc e1
         let pc' = max l1 pc
-        put trace
+        putFst trace
         (_, l2) <- check env pc' e2
         return (env, max l1 l2)
     (While e1 e2) -> do
-        modify (++ ["While: " ++ show expr])
-        trace <- get
+        modifyFst (++ ["While: " ++ show expr])
+        trace <- getFst
         (_, l1) <- check env pc e1
         let pc' = max l1 pc
-        put trace
+        putFst trace
         (_, l2) <- check env pc' e2
         return (env, max l1 l2)
     (For x e1 e2 e3) -> do
-        modify (++ ["For: " ++ show expr])
-        trace <- get
+        modifyFst (++ ["For: " ++ show expr])
+        trace <- getFst
         (_, l1) <- check env pc e1
-        put trace
+        putFst trace
         (_, l2) <- check env pc e2
         let pc' = maximum [l1, l2, pc]
-        put trace
+        putFst trace
         (_, l3) <- check (M.insert x pc' env) pc' e3 -- TODO check this
         return (env, maximum [l1, l2, l3])
     (Let x l@(TInt _) e) -> do
-        modify (++ ["LetTInt: " ++ show expr])
+        modifyFst (++ ["LetTInt: " ++ show expr])
         (_, l') <- check env pc e
         sat (l >= l') "NotSat: l >= l'"
         sat (l >= pc) "NotSat: l >= pc"
         return (M.insert x l env, l)
     (Let x l e) -> do
-        modify (++ ["LetTAbs: " ++ show expr])
+        modifyFst (++ ["LetTAbs: " ++ show expr])
         (_, l') <- check env pc e
         sat (l == l') "NotSat: l == l'"
         sat (l >= pc) "NotSat: l >= pc"
         return (M.insert x l env, l)
     (Seq e1 e2) -> do
-        modify (++ ["Seq: " ++ show expr])
-        trace <- get
+        modifyFst (++ ["Seq: " ++ show expr])
+        trace <- getFst
         (env1, l1) <- check env pc e1
-        put trace
+        putFst trace
         (env2, l2) <- check env1 pc e2
         return (env2, max l1 l2)
     (Abs x l e) -> do
-        modify (++ ["Abs: " ++ show expr])
+        modifyFst (++ ["Abs: " ++ show expr])
+        putSnd $ TInt 1000
         (_, l') <- check (M.insert x l env) pc e
-        return (env, TAbs l l')
+        pc' <- getSnd
+        return (env, TAbs pc' l l')
     (App e1 e2) -> do
-        modify (++ ["App: " ++ show expr])
-        trace <- get
+        modifyFst (++ ["App: " ++ show expr])
+        trace <- getFst
         (_, l1) <- check env pc e1
-        put trace
+        putFst trace
         (_, l2) <- check env pc e2
-        put trace
+        putFst trace
         case l1 of
-            (TAbs l1' l2') -> do
+            (TAbs pc' l1' l2') -> do
+                sat (pc' >= pc) "NotSat: pc' >= pc"
                 sat (l1' == l2) "NotSat: l1' == l2"
                 return (env, l2')
             _ -> fail "App: not a function type"
     (Rec fs) -> do
-        modify (++ ["Rec: " ++ show expr]) -- TODO implement proper trace
+        modifyFst (++ ["Rec: " ++ show expr]) -- TODO implement proper trace
         ls <- traverse (fmap snd . check env pc . snd) fs
         return (env, maximum ls)
     (Proj e _) -> do
-        modify (++ ["Proj: " ++ show expr])
+        modifyFst (++ ["Proj: " ++ show expr])
         (_, l) <- check env pc e
         return (env, l)
     (Loc _) -> do
-        modify (++ ["Loc: " ++ show expr])
+        modifyFst (++ ["Loc: " ++ show expr])
         return (env, TInt 0)
     (Ref e) -> do
-        modify (++ ["Ref: " ++ show expr])
+        modifyFst (++ ["Ref: " ++ show expr])
         (_, l) <- check env pc e
         return (env, l)
     (Deref e) -> do
-        modify (++ ["Deref: " ++ show expr])
+        modifyFst (++ ["Deref: " ++ show expr])
         (_, l) <- check env pc e
         return (env, l)
     (Assign x e) -> do
-        modify (++ ["Assign: " ++ show expr])
-        trace <- get
+        modifyFst (++ ["Assign: " ++ show expr])
+        trace <- getFst
         (_, l') <- check env pc e
-        put trace
+        putFst trace
         l <- elookup x env
+        modifySnd (min l)
         sat (l >= l') "NotSat: l >= l'"
         sat (l >= pc) "NotSat: l >= pc"
         return (env, l)

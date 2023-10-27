@@ -27,15 +27,17 @@ main = do
     checkDefault "nestedBO" nestedBO
     checkDefault "nestedBO2" nestedBO2
     checkDefault "implicitFlow" implicitFlow
+    checkDefault "assignInFunction2" assignInFunction2
+    checkDefault "assignInFunction3" assignInFunction3
 
 checkLevel :: String -> Expr -> Int -> IO ()
 checkLevel name e n = do
     print name
     print e
     putStrLn $ "Initial program counter: " ++ show n
-    let res = runStateEither (check M.empty (TInt n) e) []
+    let res = runStateEither (check M.empty (TInt n) e) ([], TInt 1000)
     case res of
-        Left (err, trace) -> do
+        Left (err, (trace, _)) -> do
             putStr $ "Error: " ++ show err
             putStrLn ""
             putStrLn "Trace:"

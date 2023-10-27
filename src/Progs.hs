@@ -24,7 +24,7 @@ import AST
 import Prelude hiding (seq)
 
 tabs :: [Int] -> LevelT
-tabs = foldr1 TAbs . map TInt
+tabs = foldr1 (TAbs (TInt 0)) . map TInt
 
 high :: Expr -> Expr
 high = Let (V "h") (TInt 1)

@@ -70,15 +70,15 @@ instance Show BinOper where
 
 data LevelT
     = TInt Int
-    | TAbs LevelT LevelT
+    | TAbs LevelT LevelT LevelT
     deriving (Eq)
 
 instance Show LevelT where
     show (TInt n) = show n
-    show (TAbs l1 l2) = show l1 ++ "->" ++ show l2
+    show (TAbs pc l1 l2) = show (show pc, show l1 ++ "->" ++ show l2)
 
 instance Ord LevelT where
     compare (TInt n) (TInt m) = compare n m
-    compare n@(TInt _) (TAbs _ m) = compare n m
-    compare (TAbs _ n) m@(TInt _) = compare n m
-    compare (TAbs _ n) (TAbs _ m) = compare n m
+    compare n@(TInt _) (TAbs _ _ m) = compare n m
+    compare (TAbs _ _ n) m@(TInt _) = compare n m
+    compare (TAbs _ _ n) (TAbs _ _ m) = compare n m
