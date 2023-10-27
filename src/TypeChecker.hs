@@ -4,11 +4,11 @@ module TypeChecker (
 
 import AST
 import Control.Monad.State.Lazy
-import Data.Map qualified as M
 import Data.Bifunctor
+import Data.List.NonEmpty qualified as NE
+import Data.Map qualified as M
 import Env
 import StateEither
-import qualified Data.List.NonEmpty as NE
 
 elookup :: Variable -> Env -> StateEither ([String], LevelT) LevelT
 elookup var env = case M.lookup var env of
@@ -18,7 +18,7 @@ elookup var env = case M.lookup var env of
         modifyFst (++ [msg])
         fail msg
 
-nelookup :: Eq a => a -> NE.NonEmpty (a, b) -> Maybe (a, b)
+nelookup :: (Eq a) => a -> NE.NonEmpty (a, b) -> Maybe (a, b)
 nelookup a = fmap (a,) . lookup a . NE.toList
 
 sat :: Bool -> String -> StateEither ([String], LevelT) ()
@@ -27,29 +27,27 @@ sat False e = do
     modifyFst (++ [e])
     fail e
 
-modifyFst :: MonadState (t, b) m => (t -> t) -> m ()
+modifyFst :: (MonadState (t, b) m) => (t -> t) -> m ()
 modifyFst = modify . first
 
-getFst :: MonadState (t, b) m => m t
+getFst :: (MonadState (t, b) m) => m t
 getFst = gets fst
 
-putFst :: MonadState (t, b) m => t -> m ()
+putFst :: (MonadState (t, b) m) => t -> m ()
 putFst t = do
     (_, b) <- get
     put (t, b)
 
-
-modifySnd :: MonadState (a, t) m => (t -> t) -> m ()
+modifySnd :: (MonadState (a, t) m) => (t -> t) -> m ()
 modifySnd = modify . second
 
-getSnd :: MonadState (a, t) m => m t
+getSnd :: (MonadState (a, t) m) => m t
 getSnd = gets snd
 
-putSnd :: MonadState (a, t) m => t -> m ()
+putSnd :: (MonadState (a, t) m) => t -> m ()
 putSnd t = do
     (a, _) <- get
     put (a, t)
-
 
 check :: Env -> LevelT -> Expr -> StateEither ([String], LevelT) (Env, LevelT)
 check env pc expr = case expr of
@@ -150,12 +148,14 @@ check env pc expr = case expr of
     (Rec fs) -> do
         modifyFst (++ ["Rec: " ++ show expr]) -- TODO implement proper trace
         trace <- getFst
-        ls <- traverse
-            (\(label, e) -> do
-                putFst trace
-                (_, l') <- check env pc e
-                return (label, l'))
-            fs
+        ls <-
+            traverse
+                ( \(label, e) -> do
+                    putFst trace
+                    (_, l') <- check env pc e
+                    return (label, l')
+                )
+                fs
         return (env, TRec ls)
     (Proj e label) -> do
         modifyFst (++ ["Proj: " ++ show expr])

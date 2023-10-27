@@ -101,7 +101,7 @@ assignInFunction2 = seq [h, l, func, application]
         h = high . Ref . N $ 1
         l = low . Ref . N $ 0
         func = Let (V "func") (tabs [1, 0]) $ Abs (V "x") (TInt 0) (Assign (V "l") (Ref $ var "x"))
-        application = App (var "func")  (var "h")
+        application = App (var "func") (var "h")
 
 -- Assign number to low variable defined outside the function body and calling it in a high context. (Should fail)
 assignInFunction3 :: Expr

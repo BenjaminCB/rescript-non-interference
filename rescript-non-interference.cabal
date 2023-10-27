@@ -58,8 +58,8 @@ common shared
     DeriveFoldable
     DeriveFunctor
     DeriveTraversable
-    FlexibleInstances
     FlexibleContexts
+    FlexibleInstances
     ImportQualifiedPost
     MultiParamTypeClasses
     OverloadedStrings

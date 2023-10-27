@@ -1,7 +1,7 @@
 module AST where
 
-import qualified Data.List.NonEmpty as NE
 import Data.List (intercalate)
+import Data.List.NonEmpty qualified as NE
 
 data Expr
     = N Int
@@ -35,7 +35,7 @@ instance Show Expr where
     show (Seq e1 e2) = show e1 ++ ";" ++ show e2
     show (Let x t e) = "let " ++ show x ++ "." ++ show t ++ " = " ++ show e
     show (BO op e1 e2) = "(" ++ show e1 ++ " " ++ show op ++ " " ++ show e2 ++ ")"
-    show (Rec fs) = "{" ++ intercalate ", " (NE.toList $ NE.map (\(a,b) -> show a ++ " = " ++ show b) fs) ++ "}"
+    show (Rec fs) = "{" ++ intercalate ", " (NE.toList $ NE.map (\(a, b) -> show a ++ " = " ++ show b) fs) ++ "}"
     show (Proj e l) = "(" ++ show e ++ "." ++ show l ++ ")"
     show (IfThenElse e1 e2 e3) = "(if " ++ show e1 ++ " then " ++ show e2 ++ " else " ++ show e3 ++ ")"
     show (IfThen e1 e2) = "(if " ++ show e1 ++ " then " ++ show e2 ++ ")"
@@ -80,7 +80,7 @@ data LevelT
 instance Show LevelT where
     show (TInt n) = show n
     show (TAbs pc l1 l2) = show (show pc, show l1 ++ "->" ++ show l2)
-    show (TRec fs) = show . map (\(a,b) -> "(" ++ show a ++ ": " ++ show b ++ ")") $ NE.toList fs
+    show (TRec fs) = show . map (\(a, b) -> "(" ++ show a ++ ": " ++ show b ++ ")") $ NE.toList fs
 
 instance Ord LevelT where
     compare (TInt n) (TInt m) = compare n m

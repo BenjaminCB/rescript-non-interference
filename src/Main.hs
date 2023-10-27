@@ -41,7 +41,7 @@ checkLevel name e n = do
             putStr $ "Error: " ++ show err
             putStrLn ""
             putStrLn "Trace:"
-            mapM_ (putStrLn . ("    "++)) trace
+            mapM_ (putStrLn . ("    " ++)) trace
         Right (t, _) -> do
             putStrLn "State:"
             print t
