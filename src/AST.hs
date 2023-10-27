@@ -1,5 +1,8 @@
 module AST where
 
+import qualified Data.List.NonEmpty as NE
+import Data.List (intercalate)
+
 data Expr
     = N Int
     | B Bool
@@ -10,7 +13,7 @@ data Expr
     | Seq Expr Expr
     | Let Variable LevelT Expr
     | BO BinOper Expr Expr
-    | Rec [(Label, Expr)]
+    | Rec (NE.NonEmpty (Label, Expr))
     | Proj Expr Label
     | IfThenElse Expr Expr Expr
     | IfThen Expr Expr
@@ -32,7 +35,7 @@ instance Show Expr where
     show (Seq e1 e2) = show e1 ++ ";" ++ show e2
     show (Let x t e) = "let " ++ show x ++ "." ++ show t ++ " = " ++ show e
     show (BO op e1 e2) = "(" ++ show e1 ++ " " ++ show op ++ " " ++ show e2 ++ ")"
-    show (Rec fs) = "({" ++ show fs ++ "})"
+    show (Rec fs) = "{" ++ intercalate ", " (NE.toList $ NE.map (\(a,b) -> show a ++ " = " ++ show b) fs) ++ "}"
     show (Proj e l) = "(" ++ show e ++ "." ++ show l ++ ")"
     show (IfThenElse e1 e2 e3) = "(if " ++ show e1 ++ " then " ++ show e2 ++ " else " ++ show e3 ++ ")"
     show (IfThen e1 e2) = "(if " ++ show e1 ++ " then " ++ show e2 ++ ")"
@@ -71,14 +74,17 @@ instance Show BinOper where
 data LevelT
     = TInt Int
     | TAbs LevelT LevelT LevelT
+    | TRec (NE.NonEmpty (Label, LevelT))
     deriving (Eq)
 
 instance Show LevelT where
     show (TInt n) = show n
     show (TAbs pc l1 l2) = show (show pc, show l1 ++ "->" ++ show l2)
+    show (TRec fs) = show . map (\(a,b) -> "(" ++ show a ++ ": " ++ show b ++ ")") $ NE.toList fs
 
 instance Ord LevelT where
     compare (TInt n) (TInt m) = compare n m
     compare n@(TInt _) (TAbs _ _ m) = compare n m
     compare (TAbs _ _ n) m@(TInt _) = compare n m
     compare (TAbs _ _ n) (TAbs _ _ m) = compare n m
+    compare _ _ = error "undefined comparison for TRec" -- TODO

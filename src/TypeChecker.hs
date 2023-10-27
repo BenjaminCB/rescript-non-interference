@@ -8,6 +8,7 @@ import Data.Map qualified as M
 import Data.Bifunctor
 import Env
 import StateEither
+import qualified Data.List.NonEmpty as NE
 
 elookup :: Variable -> Env -> StateEither ([String], LevelT) LevelT
 elookup var env = case M.lookup var env of
@@ -16,6 +17,9 @@ elookup var env = case M.lookup var env of
         let msg = "Variable " ++ show var ++ " not found in environment"
         modifyFst (++ [msg])
         fail msg
+
+nelookup :: Eq a => a -> NE.NonEmpty (a, b) -> Maybe (a, b)
+nelookup a = fmap (a,) . lookup a . NE.toList
 
 sat :: Bool -> String -> StateEither ([String], LevelT) ()
 sat True _ = return ()
@@ -145,12 +149,26 @@ check env pc expr = case expr of
             _ -> fail "App: not a function type"
     (Rec fs) -> do
         modifyFst (++ ["Rec: " ++ show expr]) -- TODO implement proper trace
-        ls <- traverse (fmap snd . check env pc . snd) fs
-        return (env, maximum ls)
-    (Proj e _) -> do
+        trace <- getFst
+        ls <- traverse
+            (\(label, e) -> do
+                putFst trace
+                (_, l') <- check env pc e
+                return (label, l'))
+            fs
+        return (env, TRec ls)
+    (Proj e label) -> do
         modifyFst (++ ["Proj: " ++ show expr])
         (_, l) <- check env pc e
-        return (env, l)
+        case l of
+            (TRec ls) -> case nelookup label ls of
+                Just (_, l') -> return (env, l')
+                Nothing -> do
+                    modifyFst (++ ["Proj: label not found"])
+                    fail "Proj: label not found"
+            _ -> do
+                modifyFst (++ ["Proj: not a record type"])
+                fail "Proj: not a record type"
     (Loc _) -> do
         modifyFst (++ ["Loc: " ++ show expr])
         return (env, TInt 0)
