@@ -22,6 +22,9 @@ module Progs (
     bindAndProjectRecord2,
     bindAndProjectRecord3,
     bindAndProjectRecord4,
+    ifInFunc,
+    appInIf,
+    okIf,
 ) where
 
 import AST
@@ -136,6 +139,21 @@ assignInFunction3 = seq [h, l, func, ifstmt]
         application = App (var "func") (N 2)
         ifstmt = IfThenElse (var "h") application (N 3)
 
+ifInFunc :: Expr
+ifInFunc = seq [h, l, func, application]
+    where
+        h = high . B $ True
+        l = low . Ref . N $ 0
+        func =
+            Let
+                (V "func")
+                (TInt 1 --> TInt 0)
+                $ Abs
+                    (V "x")
+                    (TInt 1)
+                    (IfThen (var "x") (Assign (V "l") (N 1)))
+        application = App (var "func") (var "h")
+
 whileLoop :: Expr
 whileLoop = seq [h, l, while]
     where
@@ -201,3 +219,24 @@ bindAndProjectRecord4 = seq [record, proj]
         r = Rec $ (LabelS "y", N 1) :| [(LabelS "x", N 2)]
         record = Let (V "record") t r
         proj = Proj (var "record") (LabelS "x")
+
+appInIf :: Expr
+appInIf = seq [h, l, func, ifT]
+    where
+        h = high . Ref . B $ True
+        l = low . N $ 2
+        func =
+            Let
+                (V "func")
+                (TInt 0 --> TInt 0)
+                $ Abs
+                    (V "x")
+                    (TInt 0)
+                    (Seq (Assign (V "l") (N 3)) (var "x"))
+        ifT = IfThenElse (Deref $ var "h") (App (var "func") (var "l")) (N 3)
+
+okIf :: Expr
+okIf = seq [h, ifTE]
+    where
+        h = high . B $ True
+        ifTE = IfThenElse (var "h") (N 2) (N 3)
