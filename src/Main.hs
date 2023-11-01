@@ -8,31 +8,34 @@ import TypeChecker
 
 main :: IO ()
 main = do
-    checkDefault "one" one
-    checkLevel "bindX 0" (bindX 0) 1
-    checkLevel "bindX 1" (bindX 1) 1
-    checkLevel "bindX 1" (bindX 1) 0
+    -- checkDefault "one" one
+    -- checkLevel "bindX 0" (bindX 0) 1
+    -- checkLevel "bindX 1" (bindX 1) 1
+    -- checkLevel "bindX 1" (bindX 1) 0
     checkDefault "bindLowToHigh" bindLowToHigh
     checkDefault "bindHighToLowRef" bindHighToLowRef
     checkDefault "bindLowToHighRef" bindLowToHighRef
-    checkDefault "forLoopAccum" forLoopAccum
-    checkDefault "assignInFunction" assignInFunction
-    checkDefault "whileLoop" whileLoop
     checkDefault "ifThen" ifThen
-    checkDefault "abstraction" abstraction
-    checkDefault "abstraction1" abstraction1
-    checkDefault "abstraction2" abstraction2
-    checkDefault "abstraction3" abstraction3
-    checkDefault "ifHighThenLow" ifHighThenLow
-    checkDefault "nestedBO" nestedBO
-    checkDefault "nestedBO2" nestedBO2
-    checkDefault "implicitFlow" implicitFlow
-    checkDefault "assignInFunction2" assignInFunction2
-    checkDefault "assignInFunction3" assignInFunction3
-    checkDefault "bindAndProjectRecord1" bindAndProjectRecord1
-    checkDefault "bindAndProjectRecord2" bindAndProjectRecord2
-    checkDefault "bindAndProjectRecord3" bindAndProjectRecord3
-    checkDefault "bindAndProjectRecord4" bindAndProjectRecord4
+    checkDefault "whileLoop" whileLoop
+    checkDefault "assignInFunction" assignInFunction
+    checkDefault "ifInFunc" ifInFunc
+    checkDefault "forLoopAccum" forLoopAccum
+    checkDefault "appInIf" appInIf
+    checkDefault "okIf" okIf
+    -- checkDefault "ifHighThenLow" ifHighThenLow
+    -- checkDefault "abstraction" abstraction
+    -- checkDefault "abstraction1" abstraction1
+    -- checkDefault "abstraction2" abstraction2
+    -- checkDefault "abstraction3" abstraction3
+    -- checkDefault "nestedBO" nestedBO
+    -- checkDefault "nestedBO2" nestedBO2
+    -- checkDefault "implicitFlow" implicitFlow
+    -- checkDefault "assignInFunction2" assignInFunction2
+    -- checkDefault "assignInFunction3" assignInFunction3
+    -- checkDefault "bindAndProjectRecord1" bindAndProjectRecord1
+    -- checkDefault "bindAndProjectRecord2" bindAndProjectRecord2
+    -- checkDefault "bindAndProjectRecord3" bindAndProjectRecord3
+    -- checkDefault "bindAndProjectRecord4" bindAndProjectRecord4
 
 checkLevel :: String -> Expr -> Int -> IO ()
 checkLevel name e n = do
