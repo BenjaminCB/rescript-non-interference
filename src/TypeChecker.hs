@@ -104,7 +104,7 @@ check env pc expr = case expr of
         case l' of
             TEffect l'' eff -> do
                 put trace
-                sat (l >= l'') "NotSat: l >= l''"
+                sat (l == l'') "NotSat: l == l''"
                 sat (l >= pc) "NotSat: l >= pc"
                 return (M.insert x (l @ eff) env, TInt 0, min l eff)
             _ -> do
