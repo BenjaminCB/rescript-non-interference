@@ -77,30 +77,48 @@ instance Show BinOper where
 
 data LevelT
     = TInt Int
-    | TAbs LevelT LevelT LevelT
+    | TAbs LevelT LevelT
     | TRec (NE.NonEmpty (Label, LevelT))
+    | TEffect LevelT LevelT
+    | TEmpty
     deriving (Eq)
+
+(@) :: LevelT -> LevelT -> LevelT
+(@) = TEffect
+
+infixr 5 @
+
+(-->) :: LevelT -> LevelT -> LevelT
+(-->) = TAbs
+
+infixr 6 -->
 
 instance Show LevelT where
     show (TInt n) = show n
-    show (TAbs pc l1 l2) = show (show pc, show l1 ++ "->" ++ show l2)
+    show (TAbs l1 l2) = show l1 ++ "->" ++ show l2
     show (TRec fs) = "{" ++ intercalate ", " (map (\(a, b) -> show a ++ ": " ++ show b) $ NE.toList fs) ++ "}"
+    show (TEffect l1 l2) = show l1 ++ "@" ++ show l2
+    show TEmpty = "()"
 
 instance Ord LevelT where
     compare (TInt n) (TInt m) = compare n m
-    compare n@(TInt _) (TAbs _ _ m) = compare n m
-    compare (TAbs _ _ n) m@(TInt _) = compare n m
-    compare (TAbs _ _ n) (TAbs _ _ m) = compare n m
+    compare n@(TInt _) (TAbs _ m) = compare n m
+    compare (TAbs _ n) m@(TInt _) = compare n m
+    compare (TAbs _ n) (TAbs _ m) = compare n m
     compare (TRec ns) (TRec ms) =
-        if and $ zipWith (\(a,b) (a',b') -> a == a' && b >= b') (NE.toList ns) (NE.toList ms)
-        then GT
-        else LT
+        if and $ zipWith (\(a, b) (a', b') -> a == a' && b >= b') (NE.toList ns) (NE.toList ms)
+            then GT
+            else LT
     compare (TRec ns) m@(TInt _) =
-        if all (\(_,b) -> b >= m) (NE.toList ns)
-        then GT
-        else LT
+        if all (\(_, b) -> b >= m) (NE.toList ns)
+            then GT
+            else LT
     compare n@(TInt _) (TRec ms) =
-        if any (\(_,b) -> n >= b) (NE.toList ms)
-        then GT
-        else LT
-    compare _ _ = error "undefined comparison for TRec" -- TODO
+        if any (\(_, b) -> n >= b) (NE.toList ms)
+            then GT
+            else LT
+    compare TEmpty _ = GT
+    compare _ TEmpty = LT
+    compare (TEffect n _) m = compare n m
+    compare n (TEffect m _) = compare n m
+    compare n m = error $ "Cannot compare " ++ show n ++ " and " ++ show m

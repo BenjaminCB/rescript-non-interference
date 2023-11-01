@@ -25,11 +25,8 @@ module Progs (
 ) where
 
 import AST
-import Prelude hiding (seq)
 import Data.List.NonEmpty (NonEmpty (..))
-
-tabs :: [Int] -> LevelT
-tabs = foldr1 (TAbs (TInt 0)) . map TInt
+import Prelude hiding (seq)
 
 high :: Expr -> Expr
 high = Let (V "h") (TInt 1)
@@ -86,17 +83,24 @@ abstraction1 :: Expr
 abstraction1 = Let (V "func") (TInt 0) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
 
 abstraction2 :: Expr
-abstraction2 = Let (V "func") (tabs [0, 0]) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
+abstraction2 = Let (V "func") (TInt 0 --> TInt 0) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
 
 abstraction3 :: Expr
-abstraction3 = Let (V "func") (tabs [0, 0, 0]) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
+abstraction3 = Let (V "func") (TInt 0 --> TInt 0 --> TInt 0) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
 
 assignInFunction :: Expr
 assignInFunction = seq [h, l, func, application]
     where
         h = high . Ref . N $ 1
         l = low . Ref . N $ 0
-        func = Let (V "func") (tabs [0, 0, 0]) $ Abs (V "x") (TInt 0) (Abs (V "y") (TInt 0) (Assign (V "x") (Ref $ var "y")))
+        func =
+            Let
+                (V "func")
+                (TInt 0 --> TInt 0 --> TInt 0)
+                $ Abs
+                    (V "x")
+                    (TInt 0)
+                    (Abs (V "y") (TInt 0) (Assign (V "x") (Ref $ var "y")))
         application = App (App (var "func") (var "l")) (var "h")
 
 -- Assign high param to low variable defined outside the function body. (Should fail)
@@ -105,7 +109,14 @@ assignInFunction2 = seq [h, l, func, application]
     where
         h = high . Ref . N $ 1
         l = low . Ref . N $ 0
-        func = Let (V "func") (tabs [1, 0]) $ Abs (V "x") (TInt 0) (Assign (V "l") (Ref $ var "x"))
+        func =
+            Let
+                (V "func")
+                (TInt 1 --> TInt 0)
+                $ Abs
+                    (V "x")
+                    (TInt 0)
+                    (Assign (V "l") (Ref $ var "x"))
         application = App (var "func") (var "h")
 
 -- Assign number to low variable defined outside the function body and calling it in a high context. (Should fail)
@@ -114,7 +125,14 @@ assignInFunction3 = seq [h, l, func, ifstmt]
     where
         h = high . B $ True
         l = low . Ref . N $ 0
-        func = Let (V "func") (tabs [0, 0]) $ Abs (V "x") (TInt 0) (seq [Assign (V "l") (N 3), var "x"])
+        func =
+            Let
+                (V "func")
+                (TInt 0 --> TInt 0)
+                $ Abs
+                    (V "x")
+                    (TInt 0)
+                    (seq [Assign (V "l") (N 3), var "x"])
         application = App (var "func") (N 2)
         ifstmt = IfThenElse (var "h") application (N 3)
 

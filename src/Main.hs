@@ -39,9 +39,9 @@ checkLevel name e n = do
     print name
     print e
     putStrLn $ "Initial program counter: " ++ show n
-    let res = runStateEither (check M.empty (TInt n) e) ([], TInt 1000)
+    let res = runStateEither (check M.empty (TInt n) e) []
     case res of
-        Left (err, (trace, _)) -> do
+        Left (err, trace) -> do
             putStr $ "Error: " ++ show err
             putStrLn ""
             putStrLn "Trace:"
