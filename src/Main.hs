@@ -37,12 +37,12 @@ main = do
     -- checkDefault "bindAndProjectRecord3" bindAndProjectRecord3
     -- checkDefault "bindAndProjectRecord4" bindAndProjectRecord4
 
-checkLevel :: String -> Expr -> Int -> IO ()
+checkLevel :: String -> Expr -> Sec -> IO ()
 checkLevel name e n = do
     print name
     print e
     putStrLn $ "Initial program counter: " ++ show n
-    let res = runStateEither (check M.empty (TInt n) e) []
+    let res = runStateEither (check M.empty (TSec n) e) []
     case res of
         Left (err, trace) -> do
             putStr $ "Error: " ++ show err
@@ -55,4 +55,4 @@ checkLevel name e n = do
     putStrLn ""
 
 checkDefault :: String -> Expr -> IO ()
-checkDefault name e = checkLevel name e 0
+checkDefault name e = checkLevel name e Low

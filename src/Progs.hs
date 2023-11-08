@@ -32,10 +32,10 @@ import Data.List.NonEmpty (NonEmpty (..))
 import Prelude hiding (seq)
 
 high :: Expr -> Expr
-high = Let (V "h") (TInt 1)
+high = Let (V "h") (TSec High)
 
 low :: Expr -> Expr
-low = Let (V "l") (TInt 0)
+low = Let (V "l") (TSec Low)
 
 seq :: [Expr] -> Expr
 seq = foldl1 Seq
@@ -49,8 +49,8 @@ var = Var . V
 one :: Expr
 one = N 1
 
-bindX :: Int -> Expr
-bindX n = seq [Let (V "x") (TInt n) (N 1), var "x"]
+bindX :: Sec -> Expr
+bindX n = seq [Let (V "x") (TSec n) (N 1), var "x"]
 
 bindLowToHigh :: Expr
 bindLowToHigh = Seq h l
@@ -80,16 +80,16 @@ forLoopAccum = seq [h, l, forLoop]
         forLoop = For (V "x") (N 1) (var "h") (Assign (V "l") (add (Deref $ var "l") (N 1)))
 
 abstraction :: Expr
-abstraction = Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
+abstraction = Abs (V "x") (TSec Low) (BO Add (var "x") (N 1))
 
 abstraction1 :: Expr
-abstraction1 = Let (V "func") (TInt 0) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
+abstraction1 = Let (V "func") (TSec Low) $ Abs (V "x") (TSec Low) (BO Add (var "x") (N 1))
 
 abstraction2 :: Expr
-abstraction2 = Let (V "func") (TInt 0 --> TInt 0) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
+abstraction2 = Let (V "func") (TSec Low --> TSec Low) $ Abs (V "x") (TSec Low) (BO Add (var "x") (N 1))
 
 abstraction3 :: Expr
-abstraction3 = Let (V "func") (TInt 0 --> TInt 0 --> TInt 0) $ Abs (V "x") (TInt 0) (BO Add (var "x") (N 1))
+abstraction3 = Let (V "func") (TSec Low --> TSec Low --> TSec Low) $ Abs (V "x") (TSec Low) (BO Add (var "x") (N 1))
 
 assignInFunction :: Expr
 assignInFunction = seq [h, l, func, application]
@@ -99,11 +99,11 @@ assignInFunction = seq [h, l, func, application]
         func =
             Let
                 (V "func")
-                (TInt 0 --> TInt 0 --> TInt 0)
+                (TSec Low --> TSec Low --> TSec Low)
                 $ Abs
                     (V "x")
-                    (TInt 0)
-                    (Abs (V "y") (TInt 0) (Assign (V "x") (Ref $ var "y")))
+                    (TSec Low)
+                    (Abs (V "y") (TSec Low) (Assign (V "x") (Ref $ var "y")))
         application = App (App (var "func") (var "l")) (var "h")
 
 -- Assign high param to low variable defined outside the function body. (Should fail)
@@ -115,10 +115,10 @@ assignInFunction2 = seq [h, l, func, application]
         func =
             Let
                 (V "func")
-                (TInt 1 --> TInt 0)
+                (TSec High --> TSec Low)
                 $ Abs
                     (V "x")
-                    (TInt 0)
+                    (TSec Low)
                     (Assign (V "l") (Ref $ var "x"))
         application = App (var "func") (var "h")
 
@@ -131,10 +131,10 @@ assignInFunction3 = seq [h, l, func, ifstmt]
         func =
             Let
                 (V "func")
-                (TInt 0 --> TInt 0)
+                (TSec Low --> TSec Low)
                 $ Abs
                     (V "x")
-                    (TInt 0)
+                    (TSec Low)
                     (seq [Assign (V "l") (N 3), var "x"])
         application = App (var "func") (N 2)
         ifstmt = IfThenElse (var "h") application (N 3)
@@ -147,10 +147,10 @@ ifInFunc = seq [h, l, func, application]
         func =
             Let
                 (V "func")
-                (TInt 1 --> TInt 0)
+                (TSec High --> TSec Low)
                 $ Abs
                     (V "x")
-                    (TInt 1)
+                    (TSec High)
                     (IfThen (var "x") (Assign (V "l") (N 1)))
         application = App (var "func") (var "h")
 
@@ -183,15 +183,15 @@ nestedBO2 = BO Add (BO Mul (N 1) (N 2)) (BO Sub (var "x") (N 4))
 implicitFlow :: Expr
 implicitFlow = seq [h1, h2, l, ifT]
     where
-        h1 = Let (V "h1") (TInt 1) (N 1)
-        h2 = Let (V "h2") (TInt 1) (N 1)
-        l = Let (V "l") (TInt 0) (Ref $ N 0)
+        h1 = Let (V "h1") (TSec High) (N 1)
+        h2 = Let (V "h2") (TSec High) (N 1)
+        l = Let (V "l") (TSec Low) (Ref $ N 0)
         ifT = IfThenElse (BO Eq (var "h1") (var "h2")) (Assign (V "l") (N 1)) (Assign (V "l") (N 2))
 
 bindAndProjectRecord1 :: Expr
 bindAndProjectRecord1 = seq [record, proj]
     where
-        t = TRec $ (LabelS "x", TInt 0) :| [(LabelS "y", TInt 1)]
+        t = TRec $ (LabelS "x", TSec Low) :| [(LabelS "y", TSec High)]
         r = Rec $ (LabelS "x", N 1) :| [(LabelS "y", N 2)]
         record = Let (V "record") t r
         proj = Proj (var "record") (LabelS "x")
@@ -199,7 +199,7 @@ bindAndProjectRecord1 = seq [record, proj]
 bindAndProjectRecord2 :: Expr
 bindAndProjectRecord2 = seq [record, proj]
     where
-        t = TRec $ (LabelS "x", TInt 0) :| [(LabelS "y", TInt 1)]
+        t = TRec $ (LabelS "x", TSec Low) :| [(LabelS "y", TSec High)]
         r = Rec $ (LabelS "x", N 1) :| [(LabelS "y", N 2)]
         record = Let (V "record") t r
         proj = Proj (var "record") (LabelS "y")
@@ -207,7 +207,7 @@ bindAndProjectRecord2 = seq [record, proj]
 bindAndProjectRecord3 :: Expr
 bindAndProjectRecord3 = seq [record, proj]
     where
-        t = TRec $ (LabelS "y", TInt 0) :| [(LabelS "x", TInt 1)]
+        t = TRec $ (LabelS "y", TSec Low) :| [(LabelS "x", TSec High)]
         r = Rec $ (LabelS "y", N 1) :| [(LabelS "x", N 2)]
         record = Let (V "record") t r
         proj = Proj (var "record") (LabelS "y")
@@ -215,7 +215,7 @@ bindAndProjectRecord3 = seq [record, proj]
 bindAndProjectRecord4 :: Expr
 bindAndProjectRecord4 = seq [record, proj]
     where
-        t = TRec $ (LabelS "y", TInt 0) :| [(LabelS "x", TInt 1)]
+        t = TRec $ (LabelS "y", TSec Low) :| [(LabelS "x", TSec High)]
         r = Rec $ (LabelS "y", N 1) :| [(LabelS "x", N 2)]
         record = Let (V "record") t r
         proj = Proj (var "record") (LabelS "x")
@@ -228,10 +228,10 @@ appInIf = seq [h, l, func, ifT]
         func =
             Let
                 (V "func")
-                (TInt 0 --> TInt 0)
+                (TSec Low --> TSec Low)
                 $ Abs
                     (V "x")
-                    (TInt 0)
+                    (TSec Low)
                     (Seq (Assign (V "l") (N 3)) (var "x"))
         ifT = IfThenElse (Deref $ var "h") (App (var "func") (var "l")) (N 3)
 
