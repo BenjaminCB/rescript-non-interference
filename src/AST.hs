@@ -119,11 +119,11 @@ instance Ord LevelT where
             then GT
             else LT
     compare (TRec ns) s@(TSec _) =
-        if all (\(_, b) -> b >= s) (NE.toList ns)
+        if any (\(_, b) -> b >= s) (NE.toList ns)
             then GT
             else LT
     compare s@(TSec _) (TRec ms) =
-        if any (\(_, b) -> s >= b) (NE.toList ms)
+        if all (\(_, b) -> s >= b) (NE.toList ms)
             then GT
             else LT
     compare TEmpty _ = GT
