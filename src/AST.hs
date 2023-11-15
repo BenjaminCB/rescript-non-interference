@@ -111,23 +111,22 @@ instance Show LevelT where
 
 instance Ord LevelT where
     compare (TSec s1) (TSec s2) = compare s1 s2
-    compare s@(TSec _) (TAbs _ n) = compare s n
-    compare (TAbs _ n) s@(TSec _) = compare n s
-    compare (TAbs _ n) (TAbs _ m) = compare n m
-    compare (TRec ns) (TRec ms) =
-        if and $ zipWith (\(a, b) (a', b') -> a == a' && b >= b') (NE.toList ns) (NE.toList ms)
-            then GT
-            else LT
-    compare (TRec ns) s@(TSec _) =
-        if any (\(_, b) -> b >= s) (NE.toList ns)
-            then GT
-            else LT
-    compare s@(TSec _) (TRec ms) =
-        if all (\(_, b) -> s >= b) (NE.toList ms)
-            then GT
-            else LT
-    compare TEmpty _ = GT
-    compare _ TEmpty = LT
-    compare (TEffect n _) m = compare n m
-    compare n (TEffect m _) = compare n m
-    compare n m = error $ "Cannot compare " ++ show n ++ " and " ++ show m
+    compare (TAbs x1 y1) (TAbs x2 y2) = case (compare x1 x2, compare y1 y2) of
+        (LT, LT) -> error "(LT, LT) in comparison of TAbs and TAbs"
+        (GT, GT) -> error "(GT, GT) in comparison of TAbs and TAbs"
+        (EQ, EQ) -> EQ
+        (LT, _) -> LT
+        (EQ, GT) -> LT
+        (GT, _) -> GT
+        (EQ, LT) -> GT
+    compare (TRec fs) (TRec fs') = case (all (`elem` fs') fs, all (`elem` fs) fs') of
+        (True, True) -> EQ
+        (True, False) -> LT
+        (False, True) -> GT
+        (False, False) -> error "incomparable TRec and TRec"
+    compare l@(TSec _) (TRec fs) = compare l (maximum . map snd $ NE.toList fs)
+    compare (TRec fs) l@(TSec _) = compare (maximum . map snd $ NE.toList fs) l
+    compare TEmpty TEmpty = EQ
+    compare TEmpty _ = LT
+    compare _ TEmpty = GT
+    compare t t' = error $ "incomparable types: " ++ show t ++ " and " ++ show t'
