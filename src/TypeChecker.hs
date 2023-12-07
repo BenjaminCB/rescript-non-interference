@@ -97,7 +97,19 @@ check env pc expr = case expr of
         sat (l >= l') "NotSat: l >= l'"
         sat (l >= pc) "NotSat: l >= pc"
         return (M.insert x l env, Low, min l eff)
-    (LetInf {}) -> undefined
+    (LetInf x e) -> do
+        modify (++ ["LetInf: " ++ show expr])
+        trace <- get
+        (_, l, eff) <- check env pc e
+        put trace
+        case l of
+            t1 :-> (t2 :@ eff') -> do
+                sat (pc == Low) "NotSat: pc == Low"
+                return (M.insert x (t1 :-> (t2 :@ eff')) env, Low, eff)
+            t1 -> do
+                sat (t1 `elem` [Low, High]) "NotSat: t1 `elem` [Low, High]"
+                sat (pc <= t1) "NotSat: pc <= t1"
+                return (M.insert x t1 env, Low, max t1 eff)
     -- (Let x l@(TAbs {}) e) -> do
     --     modify (++ ["LetTAbs: " ++ show expr])
     --     trace <- get
