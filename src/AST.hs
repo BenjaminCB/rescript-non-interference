@@ -12,6 +12,7 @@ data Expr
     | Abs Variable LevelT Expr
     | Seq Expr Expr
     | Let Variable LevelT Expr
+    | LetInf Variable Expr
     | BO BinOper Expr Expr
     | Rec (NE.NonEmpty (Label, Expr))
     | Proj Expr Label
@@ -34,6 +35,7 @@ instance Show Expr where
     show (Abs x t e) = "(\\" ++ show x ++ "." ++ show t ++ "->" ++ show e ++ ")"
     show (Seq e1 e2) = show e1 ++ ";" ++ show e2
     show (Let x t e) = "let " ++ show x ++ "." ++ show t ++ " = " ++ show e
+    show (LetInf x e) = "let " ++ show x ++ " = " ++ show e
     show (BO op e1 e2) = "(" ++ show e1 ++ " " ++ show op ++ " " ++ show e2 ++ ")"
     show (Rec fs) = "{" ++ intercalate ", " (NE.toList $ NE.map (\(a, b) -> show a ++ " = " ++ show b) fs) ++ "}"
     show (Proj e l) = show e ++ "." ++ show l

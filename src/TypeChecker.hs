@@ -35,13 +35,13 @@ check :: Env -> LevelT -> Expr -> StateEither [String] (Env, LevelT, LevelT)
 check env pc expr = case expr of
     (N _) -> do
         modify (++ ["Num: " ++ show expr])
-        return (env, TInt 0, TEmpty)
+        return (env, Low, TEmpty)
     (B _) -> do
         modify (++ ["Bool: " ++ show expr])
-        return (env, TInt 0, TEmpty)
+        return (env, Low, TEmpty)
     Unit -> do
         modify (++ ["Unit: " ++ show expr])
-        return (env, TInt 0, TEmpty)
+        return (env, Low, TEmpty)
     (Var x) -> do
         modify (++ ["Var: " ++ show expr])
         l <- elookup x env
@@ -89,36 +89,29 @@ check env pc expr = case expr of
         put trace
         (_, l3, eff3) <- check (M.insert x pc' env) pc' e3 -- TODO check this
         return (env, maximum [l1, l2, l3], minimum [eff1, eff2, eff3])
-    (Let x l@(TInt _) e) -> do
+    (Let x l e) -> do
         modify (++ ["LetTInt: " ++ show expr])
         trace <- get
         (_, l', eff) <- check env pc e
         put trace
         sat (l >= l') "NotSat: l >= l'"
         sat (l >= pc) "NotSat: l >= pc"
-        return (M.insert x l env, TInt 0, min l eff)
-    (Let x l@(TAbs {}) e) -> do
-        modify (++ ["LetTAbs: " ++ show expr])
-        trace <- get
-        (_, l', _) <- check env pc e
-        case l' of
-            TEffect l'' eff -> do
-                put trace
-                sat (l == l'') "NotSat: l == l''"
-                sat (l >= pc) "NotSat: l >= pc"
-                return (M.insert x (l @ eff) env, TInt 0, min l eff)
-            _ -> do
-                modify (++ ["LetTAbs: not an effect type"])
-                fail "LetTAbs: not an effect type"
-    (Let x l@(TRec {}) e) -> do
-        modify (++ ["LetTRec: " ++ show expr])
-        trace <- get
-        (_, l', eff) <- check env pc e
-        put trace
-        sat (l >= l') "NotSat: l >= l'"
-        sat (l >= pc) "NotSat: l >= pc"
-        return (M.insert x l env, TInt 0, min l eff)
-    (Let {}) -> error "dont make weird bindings"
+        return (M.insert x l env, Low, min l eff)
+    (LetInf {}) -> undefined
+    -- (Let x l@(TAbs {}) e) -> do
+    --     modify (++ ["LetTAbs: " ++ show expr])
+    --     trace <- get
+    --     (_, l', _) <- check env pc e
+    --     case l' of
+    --         TEffect l'' eff -> do
+    --             put trace
+    --             sat (l == l'') "NotSat: l == l''"
+    --             sat (l >= pc) "NotSat: l >= pc"
+    --             return (M.insert x (l @ eff) env, Low, min l eff)
+    --         _ -> do
+    --             modify (++ ["LetTAbs: not an effect type"])
+    --             fail "LetTAbs: not an effect type"
+    -- (Let {}) -> error "dont make weird bindings"
     (Seq e1 e2) -> do
         modify (++ ["Seq: " ++ show expr])
         trace <- get
@@ -144,34 +137,11 @@ check env pc expr = case expr of
                 sat (l1' == l2) "NotSat: l1' == l2"
                 return (env, l2', eff)
             t -> fail $ "App: not a function type: " ++ show t
-    (Rec fs) -> do
-        modify (++ ["Rec: " ++ show expr]) -- TODO implement proper trace
-        trace <- get
-        (ls, effs) <-
-            NE.unzip
-                <$> traverse
-                    ( \(label, e) -> do
-                        put trace
-                        (_, l', eff') <- check env pc e
-                        return ((label, l'), eff')
-                    )
-                    fs
-        return (env, TRec ls, minimum effs)
-    (Proj e label) -> do
-        modify (++ ["Proj: " ++ show expr])
-        trace <- get
-        (_, l, eff) <- check env pc e
-        put trace
-        case l of
-            (TRec ls) -> do
-                l' <- nelookup label ls
-                return (env, l', eff)
-            _ -> do
-                modify (++ ["Proj: not a record type"])
-                fail "Proj: not a record type"
+    (Rec {}) -> undefined
+    (Proj {}) -> undefined
     (Loc _) -> do
         modify (++ ["Loc: " ++ show expr])
-        return (env, TInt 0, TEmpty)
+        return (env, Low, TEmpty)
     (Ref e) -> do
         modify (++ ["Ref: " ++ show expr])
         (_, l, eff) <- check env pc e
@@ -188,4 +158,4 @@ check env pc expr = case expr of
         l <- elookup x env
         sat (l >= l') "NotSat: l >= l'"
         sat (l >= pc) "NotSat: l >= pc"
-        return (env, TInt 0, min l eff')
+        return (env, Low, min l eff')
