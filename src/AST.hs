@@ -90,6 +90,8 @@ data LevelT
     | Empty
     deriving (Eq)
 
+data LevelTEnv = LevelT :|> Env deriving (Eq, Show)
+
 instance Show LevelT where
     show Low = "L"
     show High = "H"
