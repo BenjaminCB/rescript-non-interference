@@ -114,13 +114,6 @@ check env pc expr = case expr of
         (_, l', eff') <- check (M.insert x l env) pc e
         sat (pc <= eff') "NotSat: pc <= eff'"
         return (env, l :-> (l' :@ eff'), eff')
-    (BO _ e1 e2) -> do
-        modify (++ ["BO: " ++ show expr])
-        trace <- get
-        (_, l1, eff1) <- check env pc e1
-        put trace
-        (_, l2, eff2) <- check env pc e2
-        return (env, max l1 l2, min eff1 eff2)
     (App e1 e2) -> do
         modify (++ ["App: " ++ show expr])
         trace <- get
@@ -129,12 +122,19 @@ check env pc expr = case expr of
         (_, l2, eff2) <- check env pc e2
         put trace
         case l1 of
-            ((l1' :-> l2') :@ eff3) -> do
+            (l1' :-> (l2' :@ eff3)) -> do
                 let eff = minimum [eff1, eff2, eff3]
                 sat (eff >= pc) "NotSat: eff >= pc"
                 sat (l1' == l2) "NotSat: l1' == l2"
                 return (env, l2', eff)
             t -> fail $ "App: not a function type: " ++ show t
+    (BO _ e1 e2) -> do
+        modify (++ ["BO: " ++ show expr])
+        trace <- get
+        (_, l1, eff1) <- check env pc e1
+        put trace
+        (_, l2, eff2) <- check env pc e2
+        return (env, max l1 l2, min eff1 eff2)
     (Rec {}) -> undefined
     (Proj {}) -> undefined
     (Loc _) -> do
