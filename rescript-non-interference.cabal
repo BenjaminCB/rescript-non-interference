@@ -79,7 +79,6 @@ common shared
   build-depends:
     , base        ^>=4.17.2.0
     , containers  ^>=0.6.7
-    , HUnit       ^>=1.6.2
     , mtl         ^>=2.2.2
     , lattices    ^>=2.1
 
@@ -95,10 +94,3 @@ executable rescript-non-interference
 
   -- .hs or .lhs file containing the Main module.
   main-is: Main.hs
-
-executable rescript-non-interference-test
-  -- Import common warning flags.
-  import:  shared
-
-  -- .hs or .lhs file containing the Main module.
-  main-is: Test.hs
