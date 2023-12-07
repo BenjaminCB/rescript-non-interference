@@ -3,6 +3,7 @@ module AST where
 import Data.List (intercalate)
 import Data.List.NonEmpty qualified as NE
 import Data.Map qualified as M
+import Algebra.Lattice
 
 -- i don't think env needs locations, at least not for now
 -- type Env = M.Map (Either Variable Location) LevelT
@@ -98,6 +99,35 @@ instance Show LevelT where
     show (l1 :-> l2) = show l1 ++ "->" ++ show l2
     show (l1 :@ l2) = show l1 ++ "@" ++ show l2
     show Empty = "()"
+
+arity :: LevelT -> Int
+arity Low = 0
+arity High = 0
+arity (_ :-> l2) = 1 + arity l2
+arity (l1 :@ l2) = arity l1 + arity l2
+arity Empty = 0
+
+instance Lattice LevelT where
+    Low \/ Low = Low
+    Low \/ High = High
+    High \/ Low = High
+    High \/ High = High
+    abs1@(_ :-> _) \/ abs2@(_ :-> _) = if arity abs1 == arity abs2
+        then abs1
+        else error $ "Cannot join " ++ show abs1 ++ " and " ++ show abs2
+
+    (_ :@ _) \/ _ = undefined
+    _ \/ (_ :@ _) = undefined
+    (_ :-> _) \/ _ = undefined
+    _ \/ (_ :-> _) = undefined
+
+    Empty \/ _ = Empty
+    _ \/ Empty = Empty
+
+    _ /\ _ = undefined
+
+
+
 
 instance Ord LevelT where
     compare Low Low = EQ

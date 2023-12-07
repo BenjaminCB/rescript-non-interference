@@ -82,6 +82,7 @@ common shared
     , containers  ^>=0.6.7
     , HUnit       ^>=1.6.2
     , mtl         ^>=2.2.2
+    , lattices    ^>=2.1
 
   -- Directories containing source files.
   hs-source-dirs:     src
