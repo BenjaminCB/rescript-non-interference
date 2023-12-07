@@ -82,7 +82,7 @@ check env pc expr = case expr of
         put trace
         sat (l1 `elem` [Low, High]) "NotSat: l1 `elem` [Low, High]"
         let pc' = max l1 pc
-        (_, l2, eff2) <- check env pc' e2
+        (_, _, eff2) <- check env pc' e2
         return (env, Low, min eff1 eff2)
     (N _) -> do
         modify (++ ["Num: " ++ show expr])
