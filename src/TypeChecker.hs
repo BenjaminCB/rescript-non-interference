@@ -84,6 +84,18 @@ check env pc expr = case expr of
         let pc' = max l1 pc
         (_, _, eff2) <- check env pc' e2
         return (env, Low, min eff1 eff2)
+    (For x e1 e2 e3) -> do
+        modify (++ ["For: " ++ show expr])
+        trace <- get
+        (_, l1, eff1) <- check env pc e1
+        put trace
+        sat (l1 `elem` [Low, High]) "NotSat: l1 `elem` [Low, High]"
+        (_, l2, eff2) <- check env pc e2
+        put trace
+        sat (l2 `elem` [Low, High]) "NotSat: l2 `elem` [Low, High]"
+        let pc' = maximum [l1, l2, pc]
+        (_, _, eff3) <- check (M.insert x pc' env) pc' e3
+        return (env, Low, minimum [eff1, eff2, eff3])
     (N _) -> do
         modify (++ ["Num: " ++ show expr])
         return (env, Low, Empty)
@@ -104,16 +116,6 @@ check env pc expr = case expr of
         put trace
         (_, l2, eff2) <- check env pc e2
         return (env, max l1 l2, min eff1 eff2)
-    (For x e1 e2 e3) -> do
-        modify (++ ["For: " ++ show expr])
-        trace <- get
-        (_, l1, eff1) <- check env pc e1
-        put trace
-        (_, l2, eff2) <- check env pc e2
-        let pc' = maximum [l1, l2, pc]
-        put trace
-        (_, l3, eff3) <- check (M.insert x pc' env) pc' e3 -- TODO check this
-        return (env, maximum [l1, l2, l3], minimum [eff1, eff2, eff3])
     (Abs x l e) -> do
         modify (++ ["Abs: " ++ show expr])
         (_, l', eff') <- check (M.insert x l env) pc e
