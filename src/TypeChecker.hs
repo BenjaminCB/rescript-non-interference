@@ -4,7 +4,6 @@ module TypeChecker (
 
 import AST
 import Control.Monad.State.Lazy
-import Data.List.NonEmpty qualified as NE
 import Data.Map qualified as M
 import Env
 import StateEither
@@ -14,14 +13,6 @@ elookup var env = case M.lookup var env of
     Just t -> return t
     Nothing -> do
         let msg = "Variable " ++ show var ++ " not found in environment"
-        modify (++ [msg])
-        fail msg
-
-nelookup :: (Eq a, Show a) => a -> NE.NonEmpty (a, b) -> StateEither [String] b
-nelookup a xs = case lookup a $ NE.toList xs of
-    Just b -> return b
-    Nothing -> do
-        let msg = "Label " ++ show a ++ " not found in record"
         modify (++ [msg])
         fail msg
 
