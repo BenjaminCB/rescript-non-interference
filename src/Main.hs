@@ -4,9 +4,13 @@ import AST
 import Data.Map qualified as M
 import StateEither
 import TypeChecker
+import System.Environment
 
 main :: IO ()
-main = putStrLn "Hello, Haskell!"
+main = do
+    args <- getArgs
+    mapM_ print args
+    putStrLn "Hello, Haskell!"
 
 checkLevel :: String -> Expr -> Int -> IO ()
 checkLevel name e n = do
