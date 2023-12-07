@@ -80,36 +80,26 @@ instance Show BinOper where
 data LevelT
     = Low
     | High
-    | TAbs LevelT LevelT
-    | TEffect LevelT LevelT
-    | TEmpty
+    | LevelT :@ LevelT
+    | LevelT :-> LevelT
+    | Empty
     deriving (Eq)
-
-(@) :: LevelT -> LevelT -> LevelT
-(@) = TEffect
-
-infixr 5 @
-
-(-->) :: LevelT -> LevelT -> LevelT
-(-->) = TAbs
-
-infixr 6 -->
 
 instance Show LevelT where
     show Low = "L"
     show High = "H"
-    show (TAbs l1 l2) = show l1 ++ "->" ++ show l2
-    show (TEffect l1 l2) = show l1 ++ "@" ++ show l2
-    show TEmpty = "()"
+    show (l1 :-> l2) = show l1 ++ "->" ++ show l2
+    show (l1 :@ l2) = show l1 ++ "@" ++ show l2
+    show Empty = "()"
 
 instance Ord LevelT where
     compare Low Low = EQ
     compare Low High = LT
     compare High Low = GT
     compare High High = EQ
-    compare (TAbs _ n) (TAbs _ m) = compare n m
-    compare TEmpty _ = GT
-    compare _ TEmpty = LT
-    compare (TEffect n _) m = compare n m
-    compare n (TEffect m _) = compare n m
+    compare (_ :-> n) (_ :-> m) = compare n m
+    compare Empty _ = GT
+    compare _ Empty = LT
+    compare (n :@ _) m = compare n m
+    compare n (m :@ _) = compare n m
     compare n m = error $ "Cannot compare " ++ show n ++ " and " ++ show m
