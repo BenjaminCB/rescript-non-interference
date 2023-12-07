@@ -67,7 +67,6 @@ check env pc expr = case expr of
         put trace
         (_, l3, eff3) <- check env pc' e3
         return (env, maximum [l1, l2, l3], minimum [eff1, eff2, eff3])
-    (IfThen {}) -> undefined
     (Seq e1 e2) -> do
         modify (++ ["Seq: " ++ show expr])
         trace <- get
@@ -134,7 +133,11 @@ check env pc expr = case expr of
         (_, l1, eff1) <- check env pc e1
         put trace
         (_, l2, eff2) <- check env pc e2
+        put trace
+        sat (l1 `elem` [Low, High]) "NotSat: l1 `elem` [Low, High]"
+        sat (l2 `elem` [Low, High]) "NotSat: l2 `elem` [Low, High]"
         return (env, max l1 l2, min eff1 eff2)
+    (IfThen {}) -> undefined
     (Rec {}) -> undefined
     (Proj {}) -> undefined
     (Loc _) -> do
