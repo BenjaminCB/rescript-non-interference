@@ -140,23 +140,7 @@ check env pc expr = case expr of
     (IfThen {}) -> undefined
     (Rec {}) -> undefined
     (Proj {}) -> undefined
-    (Loc _) -> do
-        modify (++ ["Loc: " ++ show expr])
-        return (env, Low, Empty)
-    (Ref e) -> do
-        modify (++ ["Ref: " ++ show expr])
-        (_, l, eff) <- check env pc e
-        return (env, l, eff)
-    (Deref e) -> do
-        modify (++ ["Deref: " ++ show expr])
-        (_, l, eff) <- check env pc e
-        return (env, l, eff)
-    (Assign x e) -> do
-        modify (++ ["Assign: " ++ show expr])
-        trace <- get
-        (_, l', eff') <- check env pc e
-        put trace
-        l <- elookup x env
-        sat (l >= l') "NotSat: l >= l'"
-        sat (l >= pc) "NotSat: l >= pc"
-        return (env, Low, min l eff')
+    (Loc _) -> undefined
+    (Ref _) -> undefined
+    (Deref _) -> undefined
+    (Assign {}) -> undefined
