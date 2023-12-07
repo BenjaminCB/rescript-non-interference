@@ -35,17 +35,17 @@ check :: Env -> LevelT -> Expr -> StateEither [String] (Env, LevelT, LevelT)
 check env pc expr = case expr of
     (N _) -> do
         modify (++ ["Num: " ++ show expr])
-        return (env, Low, TEmpty)
+        return (env, Low, Empty)
     (B _) -> do
         modify (++ ["Bool: " ++ show expr])
-        return (env, Low, TEmpty)
+        return (env, Low, Empty)
     Unit -> do
         modify (++ ["Unit: " ++ show expr])
-        return (env, Low, TEmpty)
+        return (env, Low, Empty)
     (Var x) -> do
         modify (++ ["Var: " ++ show expr])
         l <- elookup x env
-        return (env, l, TEmpty)
+        return (env, l, Empty)
     (BO _ e1 e2) -> do
         modify (++ ["BO: " ++ show expr])
         trace <- get
@@ -122,7 +122,7 @@ check env pc expr = case expr of
     (Abs x l e) -> do
         modify (++ ["Abs: " ++ show expr])
         (_, l', eff') <- check (M.insert x l env) pc e
-        return (env, l --> l' @ eff', TEmpty)
+        return (env, l :-> (l' :@ eff'), Empty)
     (App e1 e2) -> do
         modify (++ ["App: " ++ show expr])
         trace <- get
@@ -131,7 +131,7 @@ check env pc expr = case expr of
         (_, l2, eff2) <- check env pc e2
         put trace
         case l1 of
-            (TEffect (TAbs l1' l2') eff3) -> do
+            ((l1' :-> l2') :@ eff3) -> do
                 let eff = minimum [eff1, eff2, eff3]
                 sat (eff >= pc) "NotSat: eff >= pc"
                 sat (l1' == l2) "NotSat: l1' == l2"
@@ -141,7 +141,7 @@ check env pc expr = case expr of
     (Proj {}) -> undefined
     (Loc _) -> do
         modify (++ ["Loc: " ++ show expr])
-        return (env, Low, TEmpty)
+        return (env, Low, Empty)
     (Ref e) -> do
         modify (++ ["Ref: " ++ show expr])
         (_, l, eff) <- check env pc e
