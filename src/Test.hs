@@ -2,7 +2,6 @@ module Test where
 
 import AST
 import Data.Map qualified as M
-import Env
 import Progs
 import Prooftree
 import StateEither
