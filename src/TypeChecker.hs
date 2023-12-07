@@ -96,19 +96,19 @@ check env pc expr = case expr of
         let pc' = maximum [l1, l2, pc]
         (_, _, eff3) <- check (M.insert x pc' env) pc' e3
         return (env, Low, minimum [eff1, eff2, eff3])
-    (N _) -> do
-        modify (++ ["Num: " ++ show expr])
-        return (env, Low, Empty)
-    (B _) -> do
-        modify (++ ["Bool: " ++ show expr])
-        return (env, Low, Empty)
-    Unit -> do
-        modify (++ ["Unit: " ++ show expr])
-        return (env, Low, Empty)
     (Var x) -> do
         modify (++ ["Var: " ++ show expr])
         l <- elookup x env
         return (env, l, Empty)
+    (B _) -> do
+        modify (++ ["Bool: " ++ show expr])
+        return (env, Low, Empty)
+    (N _) -> do
+        modify (++ ["Num: " ++ show expr])
+        return (env, Low, Empty)
+    Unit -> do
+        modify (++ ["Unit: " ++ show expr])
+        return (env, Low, Empty)
     (BO _ e1 e2) -> do
         modify (++ ["BO: " ++ show expr])
         trace <- get
