@@ -76,10 +76,11 @@ common shared
 
   -- Other library packages from which modules are imported.
   build-depends:
-    , base        ^>=4.17.2.0
-    , containers  ^>=0.6.7
-    , mtl         ^>=2.2.2
-    , lattices    ^>=2.1
+    , base
+    , containers
+    , mtl
+    , lattices
+    , parsec
 
   -- Directories containing source files.
   hs-source-dirs:     src
