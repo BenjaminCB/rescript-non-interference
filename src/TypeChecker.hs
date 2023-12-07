@@ -109,6 +109,11 @@ check env pc expr = case expr of
     Unit -> do
         modify (++ ["Unit: " ++ show expr])
         return (env, Low, Empty)
+    (Abs x l e) -> do
+        modify (++ ["Abs: " ++ show expr])
+        (_, l', eff') <- check (M.insert x l env) pc e
+        sat (pc <= eff') "NotSat: pc <= eff'"
+        return (env, l :-> (l' :@ eff'), eff')
     (BO _ e1 e2) -> do
         modify (++ ["BO: " ++ show expr])
         trace <- get
@@ -116,10 +121,6 @@ check env pc expr = case expr of
         put trace
         (_, l2, eff2) <- check env pc e2
         return (env, max l1 l2, min eff1 eff2)
-    (Abs x l e) -> do
-        modify (++ ["Abs: " ++ show expr])
-        (_, l', eff') <- check (M.insert x l env) pc e
-        return (env, l :-> (l' :@ eff'), Empty)
     (App e1 e2) -> do
         modify (++ ["App: " ++ show expr])
         trace <- get
