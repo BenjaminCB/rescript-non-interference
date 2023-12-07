@@ -56,6 +56,18 @@ check env pc expr = case expr of
         sat (t2 <= t1) "NotSat: t2 <= t1"
         sat (pc <= t1) "NotSat: pc <= t1"
         return (M.insert x t1 env, Low, min t1 t3)
+    (IfThenElse e1 e2 e3) -> do
+        modify (++ ["IfThenElse: " ++ show expr])
+        trace <- get
+        (_, l1, eff1) <- check env pc e1
+        put trace
+        sat (l1 `elem` [Low, High]) "NotSat: l1 `elem` [Low, High]"
+        let pc' = max l1 pc
+        (_, l2, eff2) <- check env pc' e2
+        put trace
+        (_, l3, eff3) <- check env pc' e3
+        return (env, maximum [l1, l2, l3], minimum [eff1, eff2, eff3])
+    (IfThen e1 e2) -> undefined
     (N _) -> do
         modify (++ ["Num: " ++ show expr])
         return (env, Low, Empty)
@@ -75,24 +87,6 @@ check env pc expr = case expr of
         (_, l1, eff1) <- check env pc e1
         put trace
         (_, l2, eff2) <- check env pc e2
-        return (env, max l1 l2, min eff1 eff2)
-    (IfThenElse e1 e2 e3) -> do
-        modify (++ ["IfThenElse: " ++ show expr])
-        trace <- get
-        (_, l1, eff1) <- check env pc e1
-        let pc' = max l1 pc
-        put trace
-        (_, l2, eff2) <- check env pc' e2
-        put trace
-        (_, l3, eff3) <- check env pc' e3
-        return (env, maximum [l1, l2, l3], minimum [eff1, eff2, eff3])
-    (IfThen e1 e2) -> do
-        modify (++ ["IfThen: " ++ show expr])
-        trace <- get
-        (_, l1, eff1) <- check env pc e1
-        let pc' = max l1 pc
-        put trace
-        (_, l2, eff2) <- check env pc' e2
         return (env, max l1 l2, min eff1 eff2)
     (While e1 e2) -> do
         modify (++ ["While: " ++ show expr])
