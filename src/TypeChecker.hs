@@ -75,6 +75,15 @@ check env pc expr = case expr of
         put trace
         (env2, l2, eff2) <- check env1 pc e2
         return (env2, l2, min eff1 eff2)
+    (While e1 e2) -> do
+        modify (++ ["While: " ++ show expr])
+        trace <- get
+        (_, l1, eff1) <- check env pc e1
+        put trace
+        sat (l1 `elem` [Low, High]) "NotSat: l1 `elem` [Low, High]"
+        let pc' = max l1 pc
+        (_, l2, eff2) <- check env pc' e2
+        return (env, Low, min eff1 eff2)
     (N _) -> do
         modify (++ ["Num: " ++ show expr])
         return (env, Low, Empty)
@@ -94,14 +103,6 @@ check env pc expr = case expr of
         (_, l1, eff1) <- check env pc e1
         put trace
         (_, l2, eff2) <- check env pc e2
-        return (env, max l1 l2, min eff1 eff2)
-    (While e1 e2) -> do
-        modify (++ ["While: " ++ show expr])
-        trace <- get
-        (_, l1, eff1) <- check env pc e1
-        let pc' = max l1 pc
-        put trace
-        (_, l2, eff2) <- check env pc' e2
         return (env, max l1 l2, min eff1 eff2)
     (For x e1 e2 e3) -> do
         modify (++ ["For: " ++ show expr])
