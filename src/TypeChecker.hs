@@ -67,7 +67,14 @@ check env pc expr = case expr of
         put trace
         (_, l3, eff3) <- check env pc' e3
         return (env, maximum [l1, l2, l3], minimum [eff1, eff2, eff3])
-    (IfThen e1 e2) -> undefined
+    (IfThen {}) -> undefined
+    (Seq e1 e2) -> do
+        modify (++ ["Seq: " ++ show expr])
+        trace <- get
+        (env1, _, eff1) <- check env pc e1
+        put trace
+        (env2, l2, eff2) <- check env1 pc e2
+        return (env2, l2, min eff1 eff2)
     (N _) -> do
         modify (++ ["Num: " ++ show expr])
         return (env, Low, Empty)
@@ -106,13 +113,6 @@ check env pc expr = case expr of
         put trace
         (_, l3, eff3) <- check (M.insert x pc' env) pc' e3 -- TODO check this
         return (env, maximum [l1, l2, l3], minimum [eff1, eff2, eff3])
-    (Seq e1 e2) -> do
-        modify (++ ["Seq: " ++ show expr])
-        trace <- get
-        (env1, _, eff1) <- check env pc e1
-        put trace
-        (env2, l2, eff2) <- check env1 pc e2
-        return (env2, l2, min eff1 eff2)
     (Abs x l e) -> do
         modify (++ ["Abs: " ++ show expr])
         (_, l', eff') <- check (M.insert x l env) pc e
