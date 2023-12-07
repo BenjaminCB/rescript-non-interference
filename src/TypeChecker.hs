@@ -33,6 +33,29 @@ sat False e = do
 
 check :: Env -> LevelT -> Expr -> StateEither [String] (Env, LevelT, LevelT)
 check env pc expr = case expr of
+    (LetInf x e) -> do
+        modify (++ ["LetInf: " ++ show expr])
+        trace <- get
+        (_, l, eff) <- check env pc e
+        put trace
+        case l of
+            t1 :-> (t2 :@ eff') -> do
+                sat (pc == Low) "NotSat: pc == Low"
+                return (M.insert x (t1 :-> (t2 :@ eff')) env, Low, eff)
+            t1 -> do
+                sat (t1 `elem` [Low, High]) "NotSat: t1 `elem` [Low, High]"
+                sat (pc <= t1) "NotSat: pc <= t1"
+                return (M.insert x t1 env, Low, max t1 eff)
+    (Let x t1 e) -> do
+        modify (++ ["LetTInt: " ++ show expr])
+        trace <- get
+        (_, t2, t3) <- check env pc e
+        put trace
+        sat (t1 `elem` [Low, High]) "NotSat: t1 `elem` [Low, High]"
+        sat (t2 `elem` [Low, High]) "NotSat: t2 `elem` [Low, High]"
+        sat (t2 <= t1) "NotSat: t2 <= t1"
+        sat (pc <= t1) "NotSat: pc <= t1"
+        return (M.insert x t1 env, Low, min t1 t3)
     (N _) -> do
         modify (++ ["Num: " ++ show expr])
         return (env, Low, Empty)
@@ -89,41 +112,6 @@ check env pc expr = case expr of
         put trace
         (_, l3, eff3) <- check (M.insert x pc' env) pc' e3 -- TODO check this
         return (env, maximum [l1, l2, l3], minimum [eff1, eff2, eff3])
-    (Let x l e) -> do
-        modify (++ ["LetTInt: " ++ show expr])
-        trace <- get
-        (_, l', eff) <- check env pc e
-        put trace
-        sat (l >= l') "NotSat: l >= l'"
-        sat (l >= pc) "NotSat: l >= pc"
-        return (M.insert x l env, Low, min l eff)
-    (LetInf x e) -> do
-        modify (++ ["LetInf: " ++ show expr])
-        trace <- get
-        (_, l, eff) <- check env pc e
-        put trace
-        case l of
-            t1 :-> (t2 :@ eff') -> do
-                sat (pc == Low) "NotSat: pc == Low"
-                return (M.insert x (t1 :-> (t2 :@ eff')) env, Low, eff)
-            t1 -> do
-                sat (t1 `elem` [Low, High]) "NotSat: t1 `elem` [Low, High]"
-                sat (pc <= t1) "NotSat: pc <= t1"
-                return (M.insert x t1 env, Low, max t1 eff)
-    -- (Let x l@(TAbs {}) e) -> do
-    --     modify (++ ["LetTAbs: " ++ show expr])
-    --     trace <- get
-    --     (_, l', _) <- check env pc e
-    --     case l' of
-    --         TEffect l'' eff -> do
-    --             put trace
-    --             sat (l == l'') "NotSat: l == l''"
-    --             sat (l >= pc) "NotSat: l >= pc"
-    --             return (M.insert x (l @ eff) env, Low, min l eff)
-    --         _ -> do
-    --             modify (++ ["LetTAbs: not an effect type"])
-    --             fail "LetTAbs: not an effect type"
-    -- (Let {}) -> error "dont make weird bindings"
     (Seq e1 e2) -> do
         modify (++ ["Seq: " ++ show expr])
         trace <- get
