@@ -6,6 +6,7 @@ import AST
 import Control.Monad.State.Lazy
 import Data.Map qualified as M
 import StateEither
+import Algebra.Lattice
 
 elookup :: (Ord k, Show k) => k -> M.Map k a -> StateEither [String] a
 elookup var env = case M.lookup var env of
@@ -39,40 +40,40 @@ check env pc expr = case expr of
                 return $ Low :@ eff :|> M.insert x (t1 :-> (t2 :@ eff')) env
             t1 -> do
                 sat (t1 `elem` [Low, High]) "NotSat: t1 `elem` [Low, High]"
-                sat (pc <= t1) "NotSat: pc <= t1"
-                return $ Low :@ max t1 eff :|> M.insert x t1 env
+                sat (pc `joinLeq` t1) "NotSat: pc <= t1"
+                return $ Low :@ (t1 /\ eff) :|> M.insert x t1 env
     (Let x t1 e) -> trace ("Let: " ++ show expr) $ do
         t2 :@ t3 :|> _ <- check env pc e
         sat (t1 `elem` [Low, High]) "NotSat: t1 `elem` [Low, High]"
         sat (t2 `elem` [Low, High]) "NotSat: t2 `elem` [Low, High]"
-        sat (t2 <= t1) "NotSat: t2 <= t1"
-        sat (pc <= t1) "NotSat: pc <= t1"
-        return $ Low :@ min t1 t3 :|> M.insert x t1 env
+        sat (t2 `joinLeq` t1) "NotSat: t2 <= t1"
+        sat (pc `joinLeq` t1) "NotSat: pc <= t1"
+        return $ Low :@ (t1 /\ t3) :|> M.insert x t1 env
     (IfThenElse e1 e2 e3) -> trace ("IfThenElse: " ++ show expr) $ do
         l1 :@ eff1 :|> _ <- check env pc e1
         sat (l1 `elem` [Low, High]) "NotSat: l1 `elem` [Low, High]"
-        let pc' = max l1 pc
+        let pc' = l1 \/ pc
         l2 :@ eff2 :|> _ <- check env pc' e2
         l3 :@ eff3 :|> _ <- check env pc' e3
-        return $ maximum [l1, l2, l3] :@ minimum [eff1, eff2, eff3] :|> env
+        return $ joins [l1, l2, l3] :@ meets [eff1, eff2, eff3] :|> env
     (Seq e1 e2) -> trace ("Seq: " ++ show expr) $ do
         _ :@ eff1 :|> env1 <- check env pc e1
         l2 :@ eff2 :|> env2 <- check env1 pc e2
-        return $ l2 :@ min eff1 eff2 :|> env2
+        return $ l2 :@ (eff1 /\ eff2) :|> env2
     (While e1 e2) -> trace ("While: " ++ show expr) $ do
         l1 :@ eff1 :|> _ <- check env pc e1
         sat (l1 `elem` [Low, High]) "NotSat: l1 `elem` [Low, High]"
-        let pc' = max l1 pc
+        let pc' = l1 \/ pc
         _ :@ eff2 :|> _ <- check env pc' e2
-        return $ Low :@ min eff1 eff2 :|> env
+        return $ Low :@ (eff1 /\ eff2) :|> env
     (For x e1 e2 e3) -> trace ("For: " ++ show expr) $ do
         l1 :@ eff1 :|> _ <- check env pc e1
         sat (l1 `elem` [Low, High]) "NotSat: l1 `elem` [Low, High]"
         l2 :@ eff2 :|> _ <- check env pc e2
         sat (l2 `elem` [Low, High]) "NotSat: l2 `elem` [Low, High]"
-        let pc' = maximum [l1, l2, pc]
+        let pc' = joins [l1, l2, pc]
         _ :@ eff3 :|> _ <- check (M.insert x pc' env) pc' e3
-        return $ Low :@ minimum [eff1, eff2, eff3] :|> env
+        return $ Low :@ meets [eff1, eff2, eff3] :|> env
     (Var x) -> trace ("Var: " ++ show expr) $ do
         l <- elookup x env
         return $ l :@ Empty :|> env
@@ -84,15 +85,15 @@ check env pc expr = case expr of
         return $ Low :@ Empty :|> env
     (Abs x l e) -> trace ("Abs: " ++ show expr) $ do
         l' :@ eff' :|> _ <- check (M.insert x l env) pc e
-        sat (pc <= eff') "NotSat: pc <= eff'"
+        sat (pc `joinLeq` eff') "NotSat: pc <= eff'"
         return $ (l :-> (l' :@ eff')) :@ eff' :|> env
     (App e1 e2) -> trace ("App: " ++ show expr) $ do
         l1 :@ eff1 :|> _ <- check env pc e1
         l2 :@ eff2 :|> _ <- check env pc e2
         case l1 of
             (l1' :-> (l2' :@ eff3)) -> do
-                let eff = minimum [eff1, eff2, eff3]
-                sat (eff >= pc) "NotSat: eff >= pc"
+                let eff = meets [eff1, eff2, eff3]
+                sat (pc `joinLeq` eff) "NotSat: eff >= pc"
                 sat (l1' == l2) "NotSat: l1' == l2"
                 return $ l2' :@ eff :|> env
             t -> fail $ "App: not a function type: " ++ show t
@@ -101,7 +102,7 @@ check env pc expr = case expr of
         l2 :@ eff2 :|> _ <- check env pc e2
         sat (l1 `elem` [Low, High]) "NotSat: l1 `elem` [Low, High]"
         sat (l2 `elem` [Low, High]) "NotSat: l2 `elem` [Low, High]"
-        return $ max l1 l2 :@ min eff1 eff2 :|> env
+        return $ (l1 \/ l2) :@ (eff1 /\ eff2) :|> env
     (IfThen {}) -> undefined
     (Rec {}) -> undefined
     (Proj {}) -> undefined

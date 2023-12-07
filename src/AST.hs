@@ -112,31 +112,37 @@ instance Lattice LevelT where
     Low \/ High = High
     High \/ Low = High
     High \/ High = High
-    abs1@(_ :-> _) \/ abs2@(_ :-> _) = if arity abs1 == arity abs2
-        then abs1
+    abs1@(t1 :-> t1') \/ abs2@(t2 :-> t2') = if arity abs1 == arity abs2
+        then t1 /\ t2 :-> t1' \/ t2'
         else error $ "Cannot join " ++ show abs1 ++ " and " ++ show abs2
-
     (_ :@ _) \/ _ = undefined
     _ \/ (_ :@ _) = undefined
     (_ :-> _) \/ _ = undefined
     _ \/ (_ :-> _) = undefined
-
     Empty \/ _ = Empty
     _ \/ Empty = Empty
 
-    _ /\ _ = undefined
+    Low /\ Low = Low
+    Low /\ High = Low
+    Low /\ Empty = Low
+    High /\ Low = Low
+    High /\ High = High
+    High /\ Empty = High
+    Empty /\ Low = Low
+    Empty /\ High = High
+    Empty /\ Empty = Empty
+    Empty /\ abs'@(_ :-> _) = abs'
+    abs1@(t1 :-> t1') /\ abs2@(t2 :-> t2') = if arity abs1 == arity abs2
+        then t1 \/ t2 :-> t1' /\ t2'
+        else error $ "Cannot meet " ++ show abs1 ++ " and " ++ show abs2
+    abs'@(_ :-> _) /\ Empty = abs'
+    (_ :@ _) /\ _ = undefined
+    _ /\ (_ :@ _) = undefined
+    (_ :-> _) /\ _ = undefined
+    _ /\ (_ :-> _) = undefined
 
+instance BoundedMeetSemiLattice LevelT where
+    top = Empty
 
-
-
-instance Ord LevelT where
-    compare Low Low = EQ
-    compare Low High = LT
-    compare High Low = GT
-    compare High High = EQ
-    compare (_ :-> n) (_ :-> m) = compare n m
-    compare Empty _ = GT
-    compare _ Empty = LT
-    compare (n :@ _) m = compare n m
-    compare n (m :@ _) = compare n m
-    compare n m = error $ "Cannot compare " ++ show n ++ " and " ++ show m
+instance BoundedJoinSemiLattice LevelT where
+    bottom = Low -- technically, there is no bottom, but cant be bothered to use Foldable1
