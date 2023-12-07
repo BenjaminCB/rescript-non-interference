@@ -76,9 +76,9 @@ instance Show BinOper where
     show Eq = "=="
 
 data LevelT
-    = TInt Int
+    = Low
+    | High
     | TAbs LevelT LevelT
-    | TRec (NE.NonEmpty (Label, LevelT))
     | TEffect LevelT LevelT
     | TEmpty
     deriving (Eq)
@@ -94,29 +94,18 @@ infixr 5 @
 infixr 6 -->
 
 instance Show LevelT where
-    show (TInt n) = show n
+    show Low = "L"
+    show High = "H"
     show (TAbs l1 l2) = show l1 ++ "->" ++ show l2
-    show (TRec fs) = "{" ++ intercalate ", " (map (\(a, b) -> show a ++ ": " ++ show b) $ NE.toList fs) ++ "}"
     show (TEffect l1 l2) = show l1 ++ "@" ++ show l2
     show TEmpty = "()"
 
 instance Ord LevelT where
-    compare (TInt n) (TInt m) = compare n m
-    compare n@(TInt _) (TAbs _ m) = compare n m
-    compare (TAbs _ n) m@(TInt _) = compare n m
+    compare Low Low = EQ
+    compare Low High = LT
+    compare High Low = GT
+    compare High High = EQ
     compare (TAbs _ n) (TAbs _ m) = compare n m
-    compare (TRec ns) (TRec ms) =
-        if and $ zipWith (\(a, b) (a', b') -> a == a' && b >= b') (NE.toList ns) (NE.toList ms)
-            then GT
-            else LT
-    compare (TRec ns) m@(TInt _) =
-        if all (\(_, b) -> b >= m) (NE.toList ns)
-            then GT
-            else LT
-    compare n@(TInt _) (TRec ms) =
-        if any (\(_, b) -> n >= b) (NE.toList ms)
-            then GT
-            else LT
     compare TEmpty _ = GT
     compare _ TEmpty = LT
     compare (TEffect n _) m = compare n m
