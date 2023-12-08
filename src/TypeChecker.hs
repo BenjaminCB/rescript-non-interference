@@ -103,10 +103,10 @@ check env pc expr = case expr of
         sat (l1 `elem` [Low, High]) "NotSat: l1 `elem` [Low, High]"
         sat (l2 `elem` [Low, High]) "NotSat: l2 `elem` [Low, High]"
         return $ (l1 \/ l2) :@ (eff1 /\ eff2) :|> env
-    (IfThen {}) -> undefined
-    (Rec {}) -> undefined
-    (Proj {}) -> undefined
-    (Loc _) -> undefined
-    (Ref _) -> undefined
-    (Deref _) -> undefined
-    (Assign {}) -> undefined
+    (IfThen {}) -> error "IfThen: not implemented"
+    (Rec {}) -> error "Rec: not implemented"
+    (Proj {}) -> error "Proj: not implemented"
+    (Loc _) -> error "Loc: not implemented"
+    (Ref _) -> error "Ref: not implemented"
+    (Deref _) -> error "Deref: not implemented"
+    (Assign {}) -> error "Assign: not implemented"

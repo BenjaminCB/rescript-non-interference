@@ -115,10 +115,10 @@ instance Lattice LevelT where
     abs1@(t1 :-> t1') \/ abs2@(t2 :-> t2') = if arity abs1 == arity abs2
         then t1 /\ t2 :-> t1' \/ t2'
         else error $ "Cannot join " ++ show abs1 ++ " and " ++ show abs2
-    (_ :@ _) \/ _ = undefined
-    _ \/ (_ :@ _) = undefined
-    (_ :-> _) \/ _ = undefined
-    _ \/ (_ :-> _) = undefined
+    (_ :@ _) \/ _ = error "Cannot join a effect with a type"
+    _ \/ (_ :@ _) = error "Cannot join a effect with a type"
+    (_ :-> _) \/ _ = error "Cannot join a function with a type"
+    _ \/ (_ :-> _) = error "Cannot join a function with a type"
     Empty \/ _ = Empty
     _ \/ Empty = Empty
 
@@ -136,10 +136,10 @@ instance Lattice LevelT where
         then t1 \/ t2 :-> t1' /\ t2'
         else error $ "Cannot meet " ++ show abs1 ++ " and " ++ show abs2
     abs'@(_ :-> _) /\ Empty = abs'
-    (_ :@ _) /\ _ = undefined
-    _ /\ (_ :@ _) = undefined
-    (_ :-> _) /\ _ = undefined
-    _ /\ (_ :-> _) = undefined
+    (_ :@ _) /\ _ = error "Cannot meet a effect with a type"
+    _ /\ (_ :@ _) = error "Cannot meet a effect with a type"
+    (_ :-> _) /\ _ = error "Cannot meet a function with a type"
+    _ /\ (_ :-> _) = error "Cannot meet a function with a type"
 
 instance BoundedMeetSemiLattice LevelT where
     top = Empty
