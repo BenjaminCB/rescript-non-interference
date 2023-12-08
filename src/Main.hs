@@ -5,12 +5,19 @@ import Data.Map qualified as M
 import StateEither
 import TypeChecker
 import System.Environment
+import Parser
 
 main :: IO ()
 main = do
-    args <- getArgs
-    mapM_ print args
-    putStrLn "Hello, Haskell!"
+    (path:_) <- getArgs
+    contents <- readFile path
+    putStrLn "File Content: "
+    mapM_ putStrLn $ lines contents
+    putStrLn "Parsed Content: "
+    case parseInput contents of
+        Left err -> print err
+        Right e -> do
+            print e
 
 checkLevel :: String -> Expr -> Int -> IO ()
 checkLevel name e n = do

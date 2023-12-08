@@ -1,0 +1,7 @@
+let h = ref(true);
+let l = ref(false);
+if (!h) {
+    l := true
+} else {
+    l := false
+}

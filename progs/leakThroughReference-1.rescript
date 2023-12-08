@@ -1,0 +1,3 @@
+let l = ref(2);
+let h = l;
+h := 4

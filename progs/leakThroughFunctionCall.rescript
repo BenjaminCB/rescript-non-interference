@@ -1,0 +1,12 @@
+let h = true;
+let l = 2;
+let f = (x:L) => {
+    l := 3;
+    x
+};
+
+if (h) {
+    f(2)
+} else {
+    3
+}

@@ -1,0 +1,2 @@
+let h = ref(2);
+let l = h

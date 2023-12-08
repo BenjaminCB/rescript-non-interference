@@ -70,6 +70,7 @@ common shared
     AST
     StateEither
     TypeChecker
+    Parser
 
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:
