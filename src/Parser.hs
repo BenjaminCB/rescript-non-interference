@@ -107,11 +107,15 @@ dereference = do
 letExpr :: Parser Expr
 letExpr = try explicit <|> infer
     where
+        low = LH Low <$ char 'L'
+        high = LH High <$ char 'H'
+        refLow = RefLH Low <$ string "RL"
+        refHigh = RefLH High <$ string "RH"
         explicit = do
             reserved "let"
             name <- identifier
             _ <- char ':'
-            level <- LH High <$ char 'H' <|> LH Low <$ char 'L'
+            level <- low <|> high <|> refLow <|> refHigh
             _ <- spaces *> char '=' <* spaces
             Let (V name) level <$> expression
         infer = do
