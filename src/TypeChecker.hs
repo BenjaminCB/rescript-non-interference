@@ -3,10 +3,10 @@ module TypeChecker (
 ) where
 
 import AST
+import Algebra.Lattice
 import Control.Monad.State.Lazy
 import Data.Map qualified as M
 import StateEither
-import Algebra.Lattice
 
 elookup :: (Ord k, Show k) => k -> M.Map k a -> StateEither [String] a
 elookup var env = case M.lookup var env of

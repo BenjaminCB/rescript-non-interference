@@ -1,9 +1,9 @@
 module AST where
 
+import Algebra.Lattice
 import Data.List (intercalate)
 import Data.List.NonEmpty qualified as NE
 import Data.Map qualified as M
-import Algebra.Lattice
 
 -- i don't think env needs locations, at least not for now
 -- type Env = M.Map (Either Variable Location) LevelT
@@ -116,9 +116,10 @@ instance Lattice LevelT where
     (LH Low) \/ (LH High) = LH High
     (LH High) \/ (LH Low) = LH High
     (LH High) \/ (LH High) = LH High
-    abs1@(t1 :-> t1') \/ abs2@(t2 :-> t2') = if arity abs1 == arity abs2
-        then t1 /\ t2 :-> t1' \/ t2'
-        else error $ "Cannot join " ++ show abs1 ++ " and " ++ show abs2
+    abs1@(t1 :-> t1') \/ abs2@(t2 :-> t2') =
+        if arity abs1 == arity abs2
+            then t1 /\ t2 :-> t1' \/ t2'
+            else error $ "Cannot join " ++ show abs1 ++ " and " ++ show abs2
     (_ :@ _) \/ _ = error "Cannot join a effect with a type"
     _ \/ (_ :@ _) = error "Cannot join a effect with a type"
     (_ :-> _) \/ _ = error "Cannot join a function with a type"
@@ -140,9 +141,10 @@ instance Lattice LevelT where
     Empty /\ l@(RefLH _) = l
     Empty /\ Empty = Empty
     Empty /\ abs'@(_ :-> _) = abs'
-    abs1@(t1 :-> t1') /\ abs2@(t2 :-> t2') = if arity abs1 == arity abs2
-        then t1 \/ t2 :-> t1' /\ t2'
-        else error $ "Cannot meet " ++ show abs1 ++ " and " ++ show abs2
+    abs1@(t1 :-> t1') /\ abs2@(t2 :-> t2') =
+        if arity abs1 == arity abs2
+            then t1 \/ t2 :-> t1' /\ t2'
+            else error $ "Cannot meet " ++ show abs1 ++ " and " ++ show abs2
     abs'@(_ :-> _) /\ Empty = abs'
     (RefLH Low) /\ (RefLH Low) = RefLH Low
     (RefLH High) /\ (RefLH High) = RefLH High

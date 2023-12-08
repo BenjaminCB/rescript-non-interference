@@ -2,14 +2,14 @@ module Main where
 
 import AST
 import Data.Map qualified as M
-import StateEither
-import TypeChecker
-import System.Environment
 import Parser
+import StateEither
+import System.Environment
+import TypeChecker
 
 main :: IO ()
 main = do
-    (path:_) <- getArgs
+    (path : _) <- getArgs
     contents <- readFile path
     putStrLn "File Content:"
     mapM_ putStrLn $ lines contents

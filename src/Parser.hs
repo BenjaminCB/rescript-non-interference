@@ -1,29 +1,32 @@
 module Parser where
 
-import Text.Parsec
-import Text.Parsec.String (Parser)
-import Text.Parsec.Language (emptyDef)
-import qualified Text.Parsec.Token as Token
 import AST
+import Text.Parsec
+import Text.Parsec.Language (emptyDef)
+import Text.Parsec.String (Parser)
+import Text.Parsec.Token qualified as Token
 
 languageDef :: Token.LanguageDef ()
-languageDef = emptyDef { Token.identStart = letter
-                       , Token.identLetter = alphaNum
-                       , Token.reservedNames = [ "let"
-                                               , "ref"
-                                               , "if"
-                                               , "else"
-                                               , "true"
-                                               , "false"
-                                               , "H"
-                                               , "L"
-                                               , "while"
-                                               , "for"
-                                               , "in"
-                                               , "to"
-                                               ]
-                       , Token.commentLine = "--"
-                       }
+languageDef =
+    emptyDef
+        { Token.identStart = letter
+        , Token.identLetter = alphaNum
+        , Token.reservedNames =
+            [ "let"
+            , "ref"
+            , "if"
+            , "else"
+            , "true"
+            , "false"
+            , "H"
+            , "L"
+            , "while"
+            , "for"
+            , "in"
+            , "to"
+            ]
+        , Token.commentLine = "--"
+        }
 
 lexer :: Token.TokenParser ()
 lexer = Token.makeTokenParser languageDef
@@ -59,31 +62,34 @@ seqExpressions = do
 
 -- Parser for expressions
 expression :: Parser Expr
-expression = whiteSpace *> (
-    try letExpr <|>
-    try assign <|>
-    try ifThenElse <|>
-    try while <|>
-    try for <|>
-    try abstraction <|>
-    try application <|>
-    try binaryOperation <|>
-    try reference <|>
-    try dereference <|>
-    try number <|>
-    try boolean <|>
-    variable )
+expression =
+    whiteSpace
+        *> ( try letExpr
+                <|> try assign
+                <|> try ifThenElse
+                <|> try while
+                <|> try for
+                <|> try abstraction
+                <|> try application
+                <|> try binaryOperation
+                <|> try reference
+                <|> try dereference
+                <|> try number
+                <|> try boolean
+                <|> variable
+           )
 
 number :: Parser Expr
 number = N . fromIntegral <$> integer
 
 boolean :: Parser Expr
-boolean = do
-    reserved "true"
-    return $ B True
-    <|> do
-    reserved "false"
-    return $ B False
+boolean =
+    do
+        reserved "true"
+        return $ B True
+        <|> do
+            reserved "false"
+            return $ B False
 
 -- Parser for references
 reference :: Parser Expr
