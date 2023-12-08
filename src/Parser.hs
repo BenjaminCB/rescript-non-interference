@@ -99,11 +99,20 @@ dereference = do
 
 -- Parser for let expressions
 letExpr :: Parser Expr
-letExpr = do
-    reserved "let"
-    name <- identifier
-    _ <- char '='
-    LetInf (V name) <$> expression
+letExpr = try explicit <|> infer
+    where
+        explicit = do
+            reserved "let"
+            name <- identifier
+            _ <- char ':'
+            level <- LH High <$ char 'H' <|> LH Low <$ char 'L'
+            _ <- spaces *> char '=' <* spaces
+            Let (V name) level <$> expression
+        infer = do
+            reserved "let"
+            name <- identifier
+            _ <- spaces *> char '=' <* spaces
+            LetInf (V name) <$> expression
 
 variable :: Parser Expr
 variable = Var . V <$> identifier
