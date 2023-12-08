@@ -1,5 +1,6 @@
-let h = ref(true);
-let l = ref(false);
+-- should fail when reassign to l
+let h:H = ref(true);
+let l:L = ref(false);
 if (!h) {
     l := true
 } else {

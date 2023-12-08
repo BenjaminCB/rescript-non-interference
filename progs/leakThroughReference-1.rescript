@@ -1,3 +1,4 @@
-let l = ref(2);
-let h = l;
+-- should fail when using reassign
+let l:L = ref(2);
+let h:H = l;
 h := 4

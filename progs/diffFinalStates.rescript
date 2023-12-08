@@ -1,3 +1,4 @@
+-- should be typed
 let h:H = true;
 
 if (h) {
