@@ -1,2 +1,2 @@
-let h = ref(2);
-let l = h
+let h:H = ref(2);
+let l:L = h

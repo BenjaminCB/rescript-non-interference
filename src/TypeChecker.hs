@@ -46,12 +46,17 @@ check env pc expr = case expr of
                 sat (pc `joinLeq` t1) "NotSat: pc <= t1"
                 return $ LH Low :@ (t1 /\ eff) :|> M.insert x t1 env
     (Let x t1 e) -> trace ("Let: " ++ show expr) $ do
-        t2 :@ t3 :|> _ <- check env pc e
         sat (t1 `elem` [LH Low, LH High]) "NotSat: t1 `elem` [LH Low, LH High]"
-        sat (t2 `elem` [LH Low, LH High]) "NotSat: t2 `elem` [LH Low, LH High]"
-        sat (t2 `joinLeq` t1) "NotSat: t2 <= t1"
         sat (pc `joinLeq` t1) "NotSat: pc <= t1"
-        return $ LH Low :@ (t1 /\ t3) :|> M.insert x t1 env
+        t2 :@ t3 :|> _ <- check env pc e
+        case t2 of
+            RefLH l' -> do
+                sat (LH l' `joinLeq` t1) "NotSat: LH l' <= t1"
+                return $ LH Low :@ (LH l' /\ t3) :|> M.insert x (swapRef t1) env
+            _ -> do
+                sat (t2 `elem` [LH Low, LH High]) "NotSat: t2 `elem` [LH Low, LH High]"
+                sat (t2 `joinLeq` t1) "NotSat: t2 <= t1"
+                return $ LH Low :@ (t1 /\ t3) :|> M.insert x t1 env
     (IfThenElse e1 e2 e3) -> trace ("IfThenElse: " ++ show expr) $ do
         l1 :@ eff1 :|> _ <- check env pc e1
         sat (l1 `elem` [LH Low, LH High]) "NotSat: l1 `elem` [LH Low, LH High]"

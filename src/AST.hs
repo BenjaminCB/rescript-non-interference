@@ -97,6 +97,13 @@ data LevelT
     | Empty
     deriving (Eq)
 
+swapRef :: LevelT -> LevelT
+swapRef (LH l) = RefLH l
+swapRef (RefLH l) = LH l
+swapRef (l1 :-> l2) = swapRef l1 :-> swapRef l2
+swapRef (l1 :@ l2) = swapRef l1 :@ swapRef l2
+swapRef Empty = Empty
+
 data LevelTEnv = LevelT :|> Env deriving (Eq, Show)
 
 instance Show LevelT where

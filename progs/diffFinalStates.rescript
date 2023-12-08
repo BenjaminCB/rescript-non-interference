@@ -1,4 +1,4 @@
-let h = true;
+let h:H = true;
 
 if (h) {
     2
