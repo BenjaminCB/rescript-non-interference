@@ -1,0 +1,10 @@
+let h = true;
+let l = ref(1);
+let f = (x:H) => {
+    if (x) {
+        l := 0
+    } else {
+        l := 1
+    }
+};
+f(h)

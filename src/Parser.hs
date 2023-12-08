@@ -9,7 +9,19 @@ import AST
 languageDef :: Token.LanguageDef ()
 languageDef = emptyDef { Token.identStart = letter
                        , Token.identLetter = alphaNum
-                       , Token.reservedNames = ["let", "ref", "if", "else", "true", "false", "H", "L"]
+                       , Token.reservedNames = [ "let"
+                                               , "ref"
+                                               , "if"
+                                               , "else"
+                                               , "true"
+                                               , "false"
+                                               , "H"
+                                               , "L"
+                                               , "while"
+                                               , "for"
+                                               , "in"
+                                               , "to"
+                                               ]
                        , Token.commentLine = "--"
                        }
 
@@ -51,8 +63,11 @@ expression = whiteSpace *> (
     try letExpr <|>
     try assign <|>
     try ifThenElse <|>
+    try while <|>
+    try for <|>
     try abstraction <|>
     try application <|>
+    try binaryOperation <|>
     try reference <|>
     try dereference <|>
     try number <|>
@@ -102,6 +117,24 @@ ifThenElse = do
     elseExpr <- braces seqExpressions
     return $ IfThenElse cond thenExpr elseExpr
 
+while :: Parser Expr
+while = do
+    reserved "while"
+    cond <- parens expression
+    body <- braces seqExpressions
+    return $ While cond body
+
+for :: Parser Expr
+for = do
+    reserved "for"
+    name <- identifier
+    _ <- spaces *> string "in" <* spaces
+    start <- expression
+    _ <- spaces *> string "to" <* spaces
+    end <- expression
+    body <- braces seqExpressions
+    return $ For (V name) start end body
+
 assign :: Parser Expr
 assign = do
     name <- identifier
@@ -124,3 +157,11 @@ application = do
     func <- parens expression <|> variable
     arg <- parens expression
     return $ App func arg
+
+binaryOperation :: Parser Expr
+binaryOperation = do
+    op <- Add <$ char '+' <|> Sub <$ char '-' <|> Mul <$ char '*' <|> Div <$ char '/'
+    spaces
+    left <- expression
+    spaces
+    BO op left <$> expression

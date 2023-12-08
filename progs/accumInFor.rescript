@@ -1,0 +1,5 @@
+let h = 5;
+let l = ref(0);
+for x in l to h {
+    l := + !l 1
+}

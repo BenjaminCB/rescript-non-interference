@@ -1,0 +1,8 @@
+let h = ref(0);
+let l = ref(1);
+let f = (x:L) => {
+    (y:H) => {
+        x := !y
+    }
+};
+(f(l))(h)
