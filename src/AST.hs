@@ -28,7 +28,7 @@ data Expr
     | For Variable Expr Expr Expr
     | Loc Location
     | Ref Expr
-    | Deref Expr
+    | Deref Variable
     | Assign Variable Expr
     deriving (Eq)
 
@@ -83,9 +83,15 @@ instance Show BinOper where
     show Div = "/"
     show Eq = "=="
 
+data LowHigh = Low | High deriving (Eq)
+
+instance Show LowHigh where
+    show Low = "L"
+    show High = "H"
+
 data LevelT
-    = Low
-    | High
+    = LH LowHigh
+    | RefLH LowHigh
     | LevelT :@ LevelT
     | LevelT :-> LevelT
     | Empty
@@ -94,24 +100,22 @@ data LevelT
 data LevelTEnv = LevelT :|> Env deriving (Eq, Show)
 
 instance Show LevelT where
-    show Low = "L"
-    show High = "H"
+    show (LH l) = show l
+    show (RefLH l) = "*" ++ show l
     show (l1 :-> l2) = show l1 ++ "->" ++ show l2
     show (l1 :@ l2) = show l1 ++ "@" ++ show l2
     show Empty = "()"
 
 arity :: LevelT -> Int
-arity Low = 0
-arity High = 0
 arity (_ :-> l2) = 1 + arity l2
 arity (l1 :@ l2) = arity l1 + arity l2
-arity Empty = 0
+arity _ = 0
 
 instance Lattice LevelT where
-    Low \/ Low = Low
-    Low \/ High = High
-    High \/ Low = High
-    High \/ High = High
+    (LH Low) \/ (LH Low) = LH Low
+    (LH Low) \/ (LH High) = LH High
+    (LH High) \/ (LH Low) = LH High
+    (LH High) \/ (LH High) = LH High
     abs1@(t1 :-> t1') \/ abs2@(t2 :-> t2') = if arity abs1 == arity abs2
         then t1 /\ t2 :-> t1' \/ t2'
         else error $ "Cannot join " ++ show abs1 ++ " and " ++ show abs2
@@ -121,21 +125,29 @@ instance Lattice LevelT where
     _ \/ (_ :-> _) = error "Cannot join a function with a type"
     Empty \/ _ = Empty
     _ \/ Empty = Empty
+    (RefLH Low) \/ (RefLH Low) = RefLH Low
+    (RefLH High) \/ (RefLH High) = RefLH High
+    (RefLH _) \/ _ = error "Cannot join a reference with a type"
+    _ \/ (RefLH _) = error "Cannot join a reference with a type"
 
-    Low /\ Low = Low
-    Low /\ High = Low
-    Low /\ Empty = Low
-    High /\ Low = Low
-    High /\ High = High
-    High /\ Empty = High
-    Empty /\ Low = Low
-    Empty /\ High = High
+    (LH Low) /\ (LH Low) = LH Low
+    (LH Low) /\ (LH High) = LH Low
+    (LH Low) /\ Empty = LH Low
+    (LH High) /\ (LH Low) = LH Low
+    (LH High) /\ (LH High) = LH High
+    (LH High) /\ Empty = LH High
+    Empty /\ l@(LH _) = l
+    Empty /\ l@(RefLH _) = l
     Empty /\ Empty = Empty
     Empty /\ abs'@(_ :-> _) = abs'
     abs1@(t1 :-> t1') /\ abs2@(t2 :-> t2') = if arity abs1 == arity abs2
         then t1 \/ t2 :-> t1' /\ t2'
         else error $ "Cannot meet " ++ show abs1 ++ " and " ++ show abs2
     abs'@(_ :-> _) /\ Empty = abs'
+    (RefLH Low) /\ (RefLH Low) = RefLH Low
+    (RefLH High) /\ (RefLH High) = RefLH High
+    (RefLH _) /\ _ = error "Cannot meet a reference with a type"
+    _ /\ (RefLH _) = error "Cannot meet a reference with a type"
     (_ :@ _) /\ _ = error "Cannot meet a effect with a type"
     _ /\ (_ :@ _) = error "Cannot meet a effect with a type"
     (_ :-> _) /\ _ = error "Cannot meet a function with a type"
@@ -145,4 +157,4 @@ instance BoundedMeetSemiLattice LevelT where
     top = Empty
 
 instance BoundedJoinSemiLattice LevelT where
-    bottom = Low -- technically, there is no bottom, but cant be bothered to use Foldable1
+    bottom = LH Low -- technically, there is no bottom, but cant be bothered to use Foldable1

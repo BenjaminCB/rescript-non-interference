@@ -19,7 +19,7 @@ main = do
         Right e -> do
             print e
             putStrLn "Type checking:"
-            let res = runStateEither (check M.empty Low e) []
+            let res = runStateEither (check M.empty (LH Low) e) []
             case res of
                 Left (err, trace) -> do
                     putStr $ "Error: " ++ show err

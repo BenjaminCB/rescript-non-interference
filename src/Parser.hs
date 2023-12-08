@@ -95,7 +95,7 @@ reference = do
 dereference :: Parser Expr
 dereference = do
     _ <- string "!"
-    Deref <$> expression
+    Deref . V <$> identifier
 
 -- Parser for let expressions
 letExpr :: Parser Expr
@@ -146,7 +146,7 @@ abstraction = do
     _ <- char '('
     name <- identifier
     _ <- char ':'
-    level <- High <$ char 'H' <|> Low <$ char 'L'
+    level <- LH High <$ char 'H' <|> LH Low <$ char 'L'
     _ <- char ')'
     _ <- spaces *> string "=>" <* spaces
     body <- braces seqExpressions
