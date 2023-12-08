@@ -1,3 +1,4 @@
+-- should fail when using reassign
 let h:H = 5;
 let l = ref(0);
 for x in 1 to h {

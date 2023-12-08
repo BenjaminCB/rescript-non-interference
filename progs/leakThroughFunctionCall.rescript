@@ -1,6 +1,6 @@
 -- should fail when calling function in high context
 let h:H = true;
-let l:L = ref(2);
+let l = ref(2);
 let f = (x:L) => {
     l := 3;
     x

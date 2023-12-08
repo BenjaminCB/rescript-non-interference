@@ -1,6 +1,7 @@
 -- should fail when reassign to l
-let h:H = ref(true);
-let l:L = ref(false);
+let a:H = true;
+let h = ref(a);
+let l = ref(false);
 while (!h) {
     l := true
 }

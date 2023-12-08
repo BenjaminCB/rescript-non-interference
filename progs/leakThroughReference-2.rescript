@@ -1,4 +1,11 @@
 -- should fail when binding l
-let h:H = ref(2);
-let l:L = h;
+-- want to test this
+-- let h = ref(2)
+-- let l = h
+-- but then l is just infered as high, but using our rules
+-- i can not explicitly set it to a low reference in the binding
+let a:H = 2;
+let h = ref(a);
+let l = ref(0);
+l := h;
 h := 4
