@@ -107,10 +107,6 @@ dereference = do
 letExpr :: Parser Expr
 letExpr = try explicit <|> infer
     where
-        low = LH Low <$ char 'L'
-        high = LH High <$ char 'H'
-        refLow = RefLH Low <$ string "RL"
-        refHigh = RefLH High <$ string "RH"
         explicit = do
             reserved "let"
             name <- identifier
@@ -165,7 +161,7 @@ abstraction = do
     _ <- char '('
     name <- identifier
     _ <- char ':'
-    level <- LH High <$ char 'H' <|> LH Low <$ char 'L'
+    level <- low <|> high <|> refLow <|> refHigh
     _ <- char ')'
     _ <- spaces *> string "=>" <* spaces
     body <- braces seqExpressions
@@ -184,3 +180,16 @@ binaryOperation = do
     left <- expression
     spaces
     BO op left <$> expression
+
+
+low :: Parser LevelT
+low = LH Low <$ char 'L'
+
+high :: Parser LevelT
+high = LH High <$ char 'H'
+
+refLow :: Parser LevelT
+refLow = RefLH Low <$ string "RL"
+
+refHigh :: Parser LevelT
+refHigh = RefLH High <$ string "RH"
