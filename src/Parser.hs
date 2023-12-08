@@ -111,7 +111,7 @@ letExpr = try explicit <|> infer
             reserved "let"
             name <- identifier
             _ <- char ':'
-            level <- low <|> high <|> refLow <|> refHigh
+            level <- try low <|> try high <|> try refLow <|> refHigh
             _ <- spaces *> char '=' <* spaces
             Let (V name) level <$> expression
         infer = do
@@ -161,7 +161,7 @@ abstraction = do
     _ <- char '('
     name <- identifier
     _ <- char ':'
-    level <- low <|> high <|> refLow <|> refHigh
+    level <- try low <|> try high <|> try refLow <|> refHigh
     _ <- char ')'
     _ <- spaces *> string "=>" <* spaces
     body <- braces seqExpressions
